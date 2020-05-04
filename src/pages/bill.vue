@@ -1,46 +1,55 @@
 <template>
   <div class="bg">
-    <tabbar :list="list" normalColor="#666666" activeColor="#FFCB34" @change="getBillList" />
+    <tabbar
+      :list="list"
+      normalColor="#666666"
+      activeColor="#FFCB34"
+      @change="getBillList"
+      :defaultIndex="defaultIndex"
+    />
     <div class="gap"></div>
-    <block v-for="bill in bills" :key="bill.id">
-      <div class="white-card bill">
-        <div class="top">
-          <div>订单号: {{bill.orderId}}</div>
-          <div>{{bill.status}}</div>
-        </div>
-        <div class="content">
-          <div class="row" v-for="item in bill.orderDetail" :key="item.id">
-            <image :src="item.imgUrls[0]" style="width:100rpx" mode="widthFix" />
-            <div class="title">{{item.title}}</div>
-            <div class="price">
-              <div>$ {{item.price}}</div>
-              <div>X {{item.buyNum}}</div>
-            </div>
+    <skeleton :config="[{row:7},{row:7},{row:7}]" :loading="loading">
+      <block v-for="bill in bills" :key="bill.id">
+        <div class="white-card bill">
+          <div class="top">
+            <div>订单号: {{bill.orderId}}</div>
+            <div>{{bill.status}}</div>
           </div>
-          <div class="total">
-            <div style="flex:1;"></div>
-            <div class="count">
-              <div style="margin-right:20rpx;">共{{bill.orderDetail.length}}件商品</div>
-              <div>
-                实付
-                <span class="price">
-                  <span style="font-size:24rpx;">$</span>
-                  {{bill.totalPrice}}
-                </span>
+          <div class="content">
+            <div class="row" v-for="item in bill.orderDetail" :key="item.id">
+              <image :src="item.imgUrls[0]" style="width:100rpx" mode="widthFix" />
+              <div class="title">{{item.title}}</div>
+              <div class="price">
+                <div>$ {{item.price}}</div>
+                <div>X {{item.buyNum}}</div>
+              </div>
+            </div>
+            <div class="total">
+              <div style="flex:1;"></div>
+              <div class="count">
+                <div style="margin-right:20rpx;">共{{bill.orderDetail.length}}件商品</div>
+                <div>
+                  实付
+                  <span class="price">
+                    <span style="font-size:24rpx;">$</span>
+                    {{bill.totalPrice}}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="bottom">
-          <div class="deliveryImg" @click="preview(bill.deliveryImg)">送货图片</div>
-          <div class="control">
-            <div class="cancel btn">取消订单</div>
-            <div class="pay btn">立即支付</div>
+          <div class="bottom">
+            <div class="deliveryImg" @click="preview(bill.deliveryImg)">送货图片</div>
+            <div class="control">
+              <div class="cancel btn">取消订单</div>
+              <div class="pay btn">立即支付</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="gap"></div>
-    </block>
+        <div class="gap"></div>
+      </block>
+      <div class="empty" v-if="!loading && !bills.length">暂无内容</div>
+    </skeleton>
     <div class="page-gap"></div>
   </div>
 </template>
@@ -56,11 +65,20 @@ export default {
         { label: "已完成" },
         { label: "已退款" }
       ],
-      bills: []
+      bills: [],
+      defaultIndex: 0,
+      loading: true
     };
+  },
+  onShow() {
+    const { type } = this.$mp.query;
+    this.defaultIndex = this.list.findIndex((item, index) => {
+      return item.label === type;
+    });
   },
   methods: {
     async getBillList(index) {
+      this.loading = true;
       const label = this.list[index].label;
       const billRes = await this.$request("fetchOrderByUserIdAndStatus", {
         data: {
@@ -68,6 +86,7 @@ export default {
           status: label
         }
       });
+      this.loading = false;
       billRes.forEach(bill => {
         let total = 0;
         bill.orderDetail.forEach(order => {

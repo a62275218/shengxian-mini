@@ -39,6 +39,13 @@ const store = new Vuex.Store({
       }
     },
     userLogin: async ({ state, commit }, payload) => {
+      if (!payload) {
+        uni.showToast({
+          title: "获取用户信息失败",
+          icon: "none"
+        });
+        return
+      }
       const { avatarUrl, nickName } = payload;
       uni.login({
         async success(res) {
@@ -115,6 +122,13 @@ const store = new Vuex.Store({
     changeCart: (state, payload) => {
       const { index, active, num } = payload;
       const cart = state.cart;
+      if(index === 'all'){
+        cart.forEach(item=>{
+          item.active = active
+        })
+        state.cart = cart;
+        return
+      }
       if (typeof active !== "undefined") {
         cart[index].active = active;
       }

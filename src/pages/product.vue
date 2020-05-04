@@ -2,7 +2,7 @@
   <div class="bg">
     <div class="swiper">
       <swiper style="height:100%;" indicator-dots autoplay circular @change="swiperChange">
-        <block v-for="item in product.imgUrls" :key="item">
+        <block v-for="item in product.imgUrls" :key="item.id">
           <swiper-item>
             <imagep :src="item"></imagep>
           </swiper-item>
@@ -33,7 +33,7 @@
         <image src="/static/share.png" style="width:30rpx;margin-right:10rpx" mode="widthFix" />分享
       </div>
       <div class="action">
-        <div @click="()=>this.showAddCart = true">加入购物车</div>
+        <div @click="showCart(product.storageNum)">加入购物车</div>
         <div>立即购买</div>
       </div>
     </div>
@@ -41,7 +41,12 @@
       <div class="white-card cartmodal">
         <div class="control">
           <div>数量</div>
-          <numberbox :min="0" :max="product.storageNum" @change="handleCartNumChange"></numberbox>
+          <numberbox
+            :min="0"
+            :max="product.storageNum"
+            @change="handleCartNumChange"
+            :initialVal="1"
+          ></numberbox>
         </div>
         <div class="confirm" @click="addToCart">确认</div>
       </div>
@@ -56,7 +61,7 @@ export default {
     return {
       product: false,
       current: 0,
-      numToAdd: 0,
+      numToAdd: 1,
       showAddCart: false
     };
   },
@@ -81,7 +86,18 @@ export default {
     ...mapState(["productList", "userInfo"])
   },
   methods: {
+    showCart(storageNum){
+      if(storageNum < 1){
+        uni.showToast({
+          title:'该商品没货啦',
+          icon:'none'
+        })
+        return
+      }
+      this.showAddCart = true
+    },
     addToCart() {
+      console.log(this.numToAdd)
       if (!this.numToAdd) {
         return;
       }

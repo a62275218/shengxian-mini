@@ -1,24 +1,16 @@
 <template>
   <div class="bg">
+    <div v-if="!cart.length" class="empty">购物车空空如也</div>
     <block v-for="(item,index) in cart" :key="item.product.id">
-      <div class="white-card item">
-        <div
-          :class="[{'active button':item.active},{'button':!item.active}]"
-          @click="toggleActive(index)"
-        />
+      <div class="white-card item" @click="toggleActive(index)">
+        <div :class="[{'active button':item.active},{'button':!item.active}]" />
         <div class="center">
           <image :src="item.product.imgUrls[0]" style="width:200rpx;" mode="widthFix" />
           <div class="content">
             <div>{{item.product.title}}</div>
             <div class="control">
               <div class="price">${{item.product.price}}</div>
-              <numberbox
-                :min="1"
-                :max="item.product.storageNum"
-                :initialVal="item.num"
-                :index="index"
-                @change="changeNum"
-              />
+              <numberbox :min="1" :initialVal="item.num" :index="index" @change="changeNum" />
             </div>
           </div>
         </div>
@@ -26,13 +18,13 @@
       <div class="gap"></div>
     </block>
     <div class="bottom-control white-card">
-      <div>
+      <div class="select-all" @click="toggleSelectAll">
         <div :class="[{'active button':selectAll},{'button':!selectAll}]"></div>
         <div>全选</div>
       </div>
       <div class="action">
-        <div class="price">$3423423</div>
-        <div>结算(1)</div>
+        <div class="price">${{totalPrice}}</div>
+        <div class="confirm" @click="confirmBill">结算({{totalLength}})</div>
       </div>
     </div>
   </div>
@@ -47,7 +39,28 @@ export default {
     };
   },
   computed: {
-    ...mapState(["cart"])
+    ...mapState(["cart", "userInfo"]),
+    totalPrice() {
+      let total = 0;
+      this.cart.forEach(item => {
+        total += item.product.price * item.num;
+      });
+      return total;
+    },
+    totalLength() {
+      let total = 0;
+      this.cart.forEach(item => {
+        if (item.active) {
+          total += 1;
+        }
+      });
+      return total;
+    }
+  },
+  watch: {
+    selectAll(val) {
+      this.$store.commit("changeCart", { index: "all", active: val });
+    }
   },
   methods: {
     toggleActive(index) {
@@ -56,11 +69,68 @@ export default {
         active: !this.cart[index].active
       });
     },
+    async confirmBill() {
+      if (!this.totalLength) {
+        return;
+      }
+      if (!this.userInfo) {
+        uni.showToast({
+          title: "请先登录",
+          icon: "none"
+        });
+        return;
+      }
+      const result = await this.$request("checkProductStorageBeforeMakeOrder", {
+        loading:true,
+        data: {
+          products: this.cart
+            .filter(item => item.active)
+            .map(product => {
+              return {
+                id: product.product.id,
+                buyNum: product.num
+              };
+            }),
+          userId: this.userInfo.id
+        }
+      });
+      if (result) {
+        if (result.errMsg) {
+          uni.showToast({
+            title: "您已被禁用",
+            icon: "none"
+          });
+          return;
+        }
+        let failReason = "";
+        result.forEach(res => {
+          if (res.reason !== "OK") {
+            failReason = `${res.title}${res.reason}`;
+          }
+        });
+        if (failReason) {
+          uni.showToast({
+            title: failReason,
+            icon: "none"
+          });
+          return
+        }
+      } else {
+        uni.showToast({
+          title: "检查订单失败",
+          icon: "none"
+        });
+      }
+    },
     changeNum(num, index) {
+      console.log(num);
       this.$store.commit("changeCart", {
         index,
         num
       });
+    },
+    toggleSelectAll() {
+      this.selectAll = !this.selectAll;
     }
   }
 };
@@ -119,15 +189,50 @@ export default {
   }
 }
 .bottom-control {
-  .button {
-    @extend .button;
-  }
-  .active {
-    @extend .active;
-  }
+  display: flex;
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
+  justify-content: space-between;
+  .select-all {
+    display: flex;
+    align-items: center;
+    padding: 0 30rpx;
+  }
+  .button {
+    width: 40rpx;
+    height: 40rpx;
+    border-radius: 50%;
+    border: 2rpx solid #bdbdbd;
+    margin-right: 20rpx;
+  }
+  .action {
+    display: flex;
+    align-items: center;
+    .price {
+      color: #ff9f24;
+      padding: 30rpx;
+    }
+    .confirm {
+      background: #ffcb34;
+      padding: 30rpx 60rpx;
+    }
+  }
+  .active {
+    border: 2rpx solid #ffcb34;
+    position: relative;
+    &:after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 50%;
+      height: 50%;
+      border-radius: 50%;
+      background: #ffcb34;
+    }
+  }
 }
 </style>

@@ -118,3 +118,34 @@ page {
     border: none;
   }
 }
+
+.empty{
+  text-align:center;
+  color:$gray-color;
+}
+
+.row-card{
+  background:#fff;
+  border-radius:20rpx;
+  padding:0 24rpx;
+  color:#333333;
+  font-size:28rpx;
+  .row{
+    padding:20rpx 0;
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    & > div{
+      align-items: center;
+    }
+    &:not(:nth-last-child(1)){
+      border-bottom:2rpx solid #F0F0F0
+    }
+    .input{
+      display:flex;
+    }
+    .title{
+      min-width:140rpx;
+    }
+  }
+}

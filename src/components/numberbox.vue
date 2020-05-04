@@ -1,5 +1,5 @@
 <template>
-  <div class="box">
+  <div class="box" @click.stop>
     <div class="side" @click="minus">-</div>
     <div class="center">
       <input type="number" @confirm="handleValChange" v-model="value" />
@@ -28,13 +28,13 @@ export default {
   },
   methods: {
     handleValChange(e) {
-      if (this.max) {
+      if (this.max !== null) {
         this.value =
           Number(e.detail.value) > Number(this.max)
             ? Number(this.max)
             : Number(e.detail.value);
       }
-      if (this.min) {
+      if (this.min !== null) {
         this.value =
           Number(e.detail.value) < Number(this.min)
             ? Number(this.min)
@@ -43,11 +43,19 @@ export default {
       this.$emit("change", this.value, this.index);
     },
     minus() {
-      this.value = this.value - 1 < this.min ? this.min : this.value - 1;
+      if (this.min !== null) {
+        this.value = this.value - 1 < this.min ? this.min : this.value - 1;
+      } else {
+        this.value - 1;
+      }
       this.$emit("change", this.value, this.index);
     },
     add() {
-      this.value = this.value + 1 > this.max ? this.max : this.value + 1;
+      if (this.max !== null) {
+        this.value = this.value + 1 > this.max ? this.max : this.value + 1;
+      } else {
+        this.value += 1;
+      }
       this.$emit("change", this.value, this.index);
     }
   }
@@ -72,7 +80,7 @@ export default {
     border: 2rpx solid #c5c5c5;
     color: #c5c5c5;
     border-radius: 10rpx;
-    font-size:30rpx;
+    font-size: 30rpx;
   }
 }
 </style>

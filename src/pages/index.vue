@@ -4,51 +4,67 @@
       <div class="search">
         <searchbar placeholder="搜索" @search="goSearchList" />
       </div>
-      <imagep src="/static/banner.png" customStyle="height:380rpx" />
-      <div class="category">
-        <div class="item" v-for="item in category" :key="item" @click="goList(item.id)">
-          <image class="logo" :src="item.imgUrl" mode="widthFix" />
-          <div>{{item.name}}</div>
-        </div>
-      </div>
-    </div>
-    <div class="gap"></div>
-    <div class="white-card trotting" v-if="brodcasts.length">
-      <image class="icon" mode="widthFix" src="/static/laba.png" />
-      <div class="container">
-        <div class="broadcast">
-          <div v-for="broadcast in brodcasts" :key="broadcast.id">{{broadcast.notifyText}}</div>
-        </div>
-      </div>
-    </div>
-    <div class="gap"></div>
-    <div class="white-card ad-card">
-      <image :src="firstAd" style="width:100%;vertical-align:middle" mode="widthFix" />
-    </div>
-    <div class="gap"></div>
-    <block v-for="item in indexProducts" :key="item.id">
-      <div class="white-card product-card">
-        <div class="header">
-          <div class="hot">
-            <image src="/static/shuxian.png" mode="widthFix" style="width:8rpx" />
-            {{item.name}}
-          </div>
-          <div class="more" @click="goTagList(item.id)">
-            查看更多
-            <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:22rpx" />
+      <skeleton :config="[{row:3},{row:3}]" :loading="bannerLoading">
+        <swiper style="height:380rpx">
+          <block v-for="item in banners" :key="item.id">
+            <swiper-item>
+              <imagep
+                :src="item.imgUrl"
+                @click="goProduct(item.param)"
+                @load="(item)=>handleLoad(item)"
+              />
+            </swiper-item>
+          </block>
+        </swiper>
+      </skeleton>
+      <skeleton :config="[{row:3},{row:3}]" :loading="cateLoading">
+        <div class="category">
+          <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
+            <image class="logo" :src="item.imgUrl" mode="widthFix" />
+            <div>{{item.name}}</div>
           </div>
         </div>
-        <div class="product-list">
-          <div class="product-item" v-for="product in item.product" :key="product.id">
-            <productcard :item="product" height="320rpx" />
+      </skeleton>
+    </div>
+    <skeleton :config="[{row:4},{row:4}]" :loading="productLoading || adLoading">
+      <div class="gap"></div>
+      <div class="white-card trotting" v-if="brodcasts.length">
+        <image class="icon" mode="widthFix" src="/static/laba.png" />
+        <div class="container">
+          <div class="broadcast">
+            <div v-for="broadcast in brodcasts" :key="broadcast.id">{{broadcast.notifyText}}</div>
           </div>
         </div>
       </div>
       <div class="gap"></div>
-    </block>
-    <div class="white-card ad-card">
-      <image :src="secondAd" style="width:100%;vertical-align:middle" mode="widthFix" />
-    </div>
+      <div class="white-card ad-card">
+        <image :src="firstAd" style="width:100%;vertical-align:middle" mode="widthFix" />
+      </div>
+      <div class="gap"></div>
+      <block v-for="item in indexProducts" :key="item.id">
+        <div class="white-card product-card">
+          <div class="header">
+            <div class="hot">
+              <image src="/static/shuxian.png" mode="widthFix" style="width:8rpx" />
+              {{item.name}}
+            </div>
+            <div class="more" @click="goTagList(item.id)">
+              查看更多
+              <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:22rpx" />
+            </div>
+          </div>
+          <div class="product-list">
+            <div class="product-item" v-for="product in item.product" :key="product.id">
+              <productcard :item="product" height="320rpx" />
+            </div>
+          </div>
+        </div>
+        <div class="gap"></div>
+      </block>
+      <div class="white-card ad-card">
+        <image :src="secondAd" style="width:100%;vertical-align:middle" mode="widthFix" />
+      </div>
+    </skeleton>
     <div class="page-gap"></div>
   </div>
 </template>
@@ -61,11 +77,16 @@ import tabBar from "@/components/tabbar.vue";
 export default Vue.extend({
   data() {
     return {
+      banners: [],
       category: [],
       indexProducts: [],
       brodcasts: [],
       firstAd: "",
-      secondAd: ""
+      secondAd: "",
+      bannerLoading: true,
+      cateLoading: true,
+      productLoading: true,
+      adLoading: true
     };
   },
   computed: {
@@ -79,12 +100,16 @@ export default Vue.extend({
     this.fetchAds();
     this.fetchProducts();
     this.fetchTrotting();
+    this.fetchBanner();
   },
   components: {
     customModal,
     tabBar
   },
   methods: {
+    handleLoad(item) {
+      this.bannerLoading = false;
+    },
     goList(id) {
       uni.navigateTo({
         url: `/pages/productlist?categoryid=${id}`
@@ -98,31 +123,50 @@ export default Vue.extend({
       }
     },
     async fetchTrotting() {
+      this.brodcastLoading = true;
       const brodcasts = await this.$request("fetchNotification", {});
       this.brodcasts = brodcasts;
+      this.brodcastLoading = false;
     },
     goTagList(id) {
       uni.navigateTo({
         url: `/pages/productlist?tagid=${id}`
       });
     },
+    goProduct(id) {
+      if (id) {
+        uni.navigateTo({ url: `/pages/product?id=${id}` });
+      }
+    },
+    async fetchBanner() {
+      this.bannerLoading = true;
+      const bannerRes = await this.$request("fetchBanner", {});
+      this.bannerLoading = false;
+      this.banners = bannerRes;
+    },
     async fetchHomePageCategories() {
+      this.cateLoading = true;
       const category = await this.$request("fetchHomePageCategories", {});
       this.category = category;
+      this.cateLoading = false;
     },
     async fetchAds() {
+      this.adLoading = true;
       const ads = await this.$request("fetchAdByType", {
         data: {
           type: "首页"
         }
       });
+      this.adLoading = false;
       if (ads && ads.length) {
         this.firstAd = ads[0].imgUrl;
         this.secondAd = ads[1].imgUrl;
       }
     },
     async fetchProducts() {
+      this.productLoading = true;
       const tags = await this.$request("fetchTag", {});
+      this.productLoading = false;
       if (tags && tags.length) {
         tags.forEach(item => {
           item.products = [];
@@ -153,7 +197,7 @@ export default Vue.extend({
     left: 100%;
   }
   100% {
-    left: -100%;
+    left: -200%;
   }
 }
 
@@ -161,14 +205,14 @@ export default Vue.extend({
   padding: 10rpx 20rpx;
   display: flex;
   align-items: center;
-  image{
-    margin-right:20rpx;
+  image {
+    margin-right: 20rpx;
   }
   .container {
     flex: 1;
     overflow: hidden;
-    height:60rpx;
-    position:relative;
+    height: 60rpx;
+    position: relative;
     .broadcast {
       color: #666666;
       white-space: nowrap;
@@ -181,9 +225,9 @@ export default Vue.extend({
       align-items: center;
       animation: horizontal 15s linear infinite;
       & div {
-        padding-right:80rpx;
-        &:nth-last-child(1){
-          padding:0;
+        padding-right: 80rpx;
+        &:nth-last-child(1) {
+          padding: 0;
         }
       }
     }

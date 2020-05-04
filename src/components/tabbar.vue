@@ -12,13 +12,14 @@
 
 <script lang="ts">
 export default {
-  props: ["list", "normalColor", "activeColor", "customStyle"],
-  created() {
-    this.$emit("change", this.activeIndex);
+  props: ["list", "normalColor", "activeColor", "customStyle", "defaultIndex"],
+  mounted(){
+    console.log('show')
+    this.tabChange(this.defaultIndex || 0)
   },
   data() {
     return {
-      activeIndex: 0
+      activeIndex: this.defaultIndex || 0
     };
   },
   computed: {
@@ -46,12 +47,12 @@ export default {
 
 <style lang="scss">
 .tabbar {
-  background:#fff;
+  background: #fff;
   height: 88rpx;
   display: flex;
   align-items: center;
   .item {
-    text-align:center;
+    text-align: center;
     flex: 1;
     line-height: 88rpx;
   }

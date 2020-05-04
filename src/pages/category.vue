@@ -75,6 +75,7 @@ export default {
   height: 100vh;
   .navbar {
     width: 200rpx;
+    min-width:200rpx;
     background: #f7f7f7;
     .nav-item {
       padding: 40rpx;

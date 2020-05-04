@@ -12,7 +12,7 @@ export default Vue.extend({
     console.log("load");
   },
   onShow() {
-    console.log("App Show");
+    this.$store.commit('retriveUser')
     this.$store.dispatch('fetchTotalList')
     this.$store.commit('retriveCart')
   },

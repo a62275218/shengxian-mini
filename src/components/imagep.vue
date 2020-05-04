@@ -1,39 +1,45 @@
 <template>
   <div id="container" class="container" :style="customStyle">
-    <image :src="src" :mode="customMode" :style="[innerStyle]" @load="handleLoad" />
+    <image :src="src" :mode="customMode || mode" :style="[innerStyle]" @load="handleLoad" />
   </div>
 </template>
 
 <script lang="ts">
 export default {
   data() {
-    return { widthMode: false, customMode: "", innerStyle: {} };
+    return {
+      widthMode: true,
+    };
   },
   props: ["src", "customStyle"],
-  watch: {
-    widthMode: {
-      immediate: true,
-      handler(val) {
-        this.customMode = val ? "widthFix" : "heightFix";
-      }
+  computed: {
+    innerStyle() {
+      return this.widthMode ? { width: "100%" } : { height: "100%" };
+    },
+    mode() {
+      return this.widthMode ? "widthFix" : "heightFix";
     }
   },
   methods: {
     handleLoad(e) {
       const height = e.detail.height;
       const width = e.detail.width;
-      uni
-        .createSelectorQuery()
-        .in(this)
-        .select("#container")
-        .boundingClientRect(data => {
-          const ratio = data.height / data.width;
-          this.widthMode = height / width > ratio;
-          this.innerStyle = this.widthMode
-            ? { width: "100%" }
-            : { height: "100%" };
-        })
-        .exec();
+      setTimeout(() => {
+        uni
+          .createSelectorQuery()
+          .in(this)
+          .select("#container")
+          .boundingClientRect(data => {
+            const ratio = data.height / data.width;
+            if(isNaN(ratio)){
+              this.widthMode = true;
+              return
+            }
+            this.widthMode = height / width > ratio;
+          })
+          .exec();
+        this.$emit("load");
+      }, 0);
     }
   }
 };

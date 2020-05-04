@@ -14,7 +14,7 @@
     <div class="white-card bill-section">
       <div class="section-title">我的订单</div>
       <div class="bill-list">
-        <div v-for="item in menu" :key="item" class="item">
+        <div v-for="item in menu" :key="item.title" class="item" @click="navigateBill(item.title)">
           <image style="width:80%;" :src="item.icon" mode="widthFix" />
           <div>{{item.title}}</div>
         </div>
@@ -23,7 +23,7 @@
     <div class="gap"></div>
     <div class="white-card service-section">
       <div class="section-title">我的服务</div>
-      <div class="row" v-for="item in menu2" :key="item">
+      <div class="row" v-for="item in menu2" :key="item.title">
         <div class="left">
           <image style="width:60rpx;" :src="item.icon" mode="widthFix" />
           {{item.title}}
@@ -89,6 +89,11 @@ export default {
   methods: {
     login(userInfoRes) {
       this.$store.dispatch("userLogin", userInfoRes.detail.userInfo);
+    },
+    navigateBill(title) {
+      uni.navigateTo({
+        url: `/pages/bill?type=${title}`
+      });
     }
   }
 };

@@ -3,7 +3,7 @@
     <div class="skeleton" v-if="loading">
       <div class="block" v-for="(item,index) in config" :key="index">
         <div class="avatar" v-if="item.avatar"></div>
-        <div class="content">
+        <div class="skeleton-content">
           <div class="text" v-for="(itm,idx) in item.row" :key="idx"></div>
         </div>
       </div>
@@ -20,7 +20,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @keyframes skeleton-ani {
   /* 骨架屏动画 */
   from {
@@ -58,22 +58,25 @@ export default {
         @include bg();
       }
     }
-    .text {
-      position: relative;
-      overflow: hidden;
-      &:nth-child(1) {
-        width: 40%;
-      }
-      &:nth-last-child(2) {
-        width: 80%;
-      }
-      &:nth-last-child(1) {
-        width: 70%;
-      }
-      height: 20rpx;
-      margin-bottom: 20rpx;
-      &::after {
-        @include bg();
+    .skeleton-content {
+      width:100%;
+      .text {
+        position: relative;
+        overflow: hidden;
+        &:nth-child(1) {
+          width: 40%;
+        }
+        &:nth-last-child(2) {
+          width: 80%;
+        }
+        &:nth-last-child(1) {
+          width: 70%;
+        }
+        height: 20rpx;
+        margin-bottom: 20rpx;
+        &::after {
+          @include bg();
+        }
       }
     }
   }
