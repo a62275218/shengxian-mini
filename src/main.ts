@@ -1,7 +1,7 @@
 import Vue from "vue";
 import App from "./App.vue";
 import store from "./store";
-import { getIn, request } from "./util";
+import { getIn, request, debounce, throttle } from "./util";
 import imagep from "@/components/imagep.vue";
 import skeleton from "@/components/skeleton.vue";
 import searchbar from "@/components/searchbar.vue";
@@ -15,6 +15,8 @@ Vue.config.productionTip = false;
 Vue.prototype.$store = store;
 Vue.prototype.$getIn = getIn;
 Vue.prototype.$request = request;
+Vue.prototype.$debounce = debounce;
+Vue.prototype.$throttle = throttle;
 Vue.component("imagep", imagep);
 Vue.component("skeleton", skeleton);
 Vue.component("searchbar", searchbar);

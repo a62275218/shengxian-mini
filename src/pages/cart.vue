@@ -17,7 +17,7 @@
       </div>
       <div class="gap"></div>
     </block>
-    <div class="bottom-control white-card">
+    <div class="bottom-control white-card" v-if="cart.length">
       <div class="select-all" @click="toggleSelectAll">
         <div :class="[{'active button':selectAll},{'button':!selectAll}]"></div>
         <div>全选</div>
@@ -32,10 +32,11 @@
 
 <script>
 import { mapState } from "vuex";
+import { checkBill } from "@/util";
 export default {
   data() {
     return {
-      selectAll: false
+      selectAll: true
     };
   },
   computed: {
@@ -43,7 +44,9 @@ export default {
     totalPrice() {
       let total = 0;
       this.cart.forEach(item => {
-        total += item.product.price * item.num;
+        if (item.active) {
+          total += item.product.price * item.num;
+        }
       });
       return total;
     },
@@ -57,16 +60,28 @@ export default {
       return total;
     }
   },
-  watch: {
-    selectAll(val) {
-      this.$store.commit("changeCart", { index: "all", active: val });
-    }
-  },
+  // watch: {
+  //   selectAll: {
+  //     handler(val) {
+  //       this.$store.commit("changeCart", { index: "all", active: val });
+  //     },
+  //     immediate: true
+  //   }
+  // },
   methods: {
     toggleActive(index) {
       this.$store.commit("changeCart", {
         index,
         active: !this.cart[index].active
+      });
+      this.$nextTick(() => {
+        let activeAll = true;
+        this.cart.forEach(item => {
+          if (!item.active) {
+            activeAll = false;
+          }
+        });
+        this.selectAll = activeAll;
       });
     },
     async confirmBill() {
@@ -81,7 +96,7 @@ export default {
         return;
       }
       const result = await this.$request("checkProductStorageBeforeMakeOrder", {
-        loading:true,
+        loading: true,
         data: {
           products: this.cart
             .filter(item => item.active)
@@ -94,36 +109,14 @@ export default {
           userId: this.userInfo.id
         }
       });
-      if (result) {
-        if (result.errMsg) {
-          uni.showToast({
-            title: "您已被禁用",
-            icon: "none"
-          });
-          return;
-        }
-        let failReason = "";
-        result.forEach(res => {
-          if (res.reason !== "OK") {
-            failReason = `${res.title}${res.reason}`;
-          }
-        });
-        if (failReason) {
-          uni.showToast({
-            title: failReason,
-            icon: "none"
-          });
-          return
-        }
-      } else {
-        uni.showToast({
-          title: "检查订单失败",
-          icon: "none"
+      const resultT = checkBill(result);
+      if (resultT) {
+        uni.navigateTo({
+          url: "/pages/billconfirm"
         });
       }
     },
     changeNum(num, index) {
-      console.log(num);
       this.$store.commit("changeCart", {
         index,
         num
@@ -131,6 +124,10 @@ export default {
     },
     toggleSelectAll() {
       this.selectAll = !this.selectAll;
+      this.$store.commit("changeCart", {
+        index: "all",
+        active: !this.selectAll
+      });
     }
   }
 };

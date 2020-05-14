@@ -3,15 +3,6 @@
     <uniCalendar ref="calendar" :insert="false" @confirm="confirmDate" />
     <div class="row-card">
       <div class="row">
-        <div class="title">支付方式</div>
-        <div>
-          <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
-        </div>
-      </div>
-    </div>
-    <div class="gap"></div>
-    <div class="row-card">
-      <div class="row">
         <div class="input">
           <div class="title">姓名</div>
           <input type="text" v-model="name" />
@@ -23,8 +14,13 @@
           <input type="text" v-model="phone" />
         </div>
         <div class="veriCode">
-          <input type="text" v-model="veriCode" />
-          <div class="get">获取验证码</div>
+          <input
+            :class="{'pass':veriPass,'fail':!veriPass}"
+            type="text"
+            v-model="veriCode"
+            @input="verifyCode"
+          />
+          <div class="get" @click="getVeriCode" v-if="!share">获取验证码</div>
         </div>
       </div>
       <div class="row">
@@ -41,7 +37,7 @@
             type="text"
             style="width:90%;height:120rpx;"
             v-model="address"
-            @confirm="searchGeoLocation"
+            @blur="searchGeoLocation"
           />
         </div>
         <div @click="getLocation">
@@ -76,7 +72,7 @@
       </div>
     </div>
     <div class="gap"></div>
-    <button class="share" open-type="share">转发订单信息给客服</button>
+    <button class="share" open-type="share" v-if="!share">转发订单信息给客服</button>
     <div class="gap"></div>
     <div class="must-know">
       <div class="title">购买须知</div>
@@ -87,38 +83,95 @@
       <div class="left">
         实付
         <div class="price">${{totalPrice}}</div>
+        <span
+          style="font-size:24rpx;"
+        >{{shipPrice !== undefined?`(包含运费:$${shipPrice})`:`请选择地址计算运费`}}</span>
       </div>
-      <div class="confirm" @click="confirmPay">立即支付</div>
+      <div class="confirm" @click="confirmPay" v-if="!share">立即支付</div>
     </div>
   </div>
 </template>
 
 <script>
 import { mapState } from "vuex";
+import { formatPhoneNumber, checkBill } from "@/util";
 export default {
   data() {
     return {
       veriCode: "",
-      name: this.userInfo ? this.userInfo.username : "",
-      phone: this.userInfo ? this.userInfo.username : "",
-      wechat: this.userInfo ? this.userInfo.wechat : "",
-      address: this.userInfo ? this.userInfo.address : "",
+      veriMatch: "",
+      name: "",
+      phone: "",
+      wechat: "",
+      address: "",
       deliveryTime: "",
       ruleText: "",
-      geoLocation: undefined
+      subName: "",
+      shipPrice: undefined,
+      veriPass: false,
+      geoLocation: undefined,
+      share: false
     };
   },
   async onShow() {
-    console.log(this.$mp.query)
+    const { billInfo } = this.$mp.query;
+    if (billInfo) {
+      this.share = true;
+      const bill = JSON.parse(billInfo);
+      this.name = bill.name;
+      this.phone = bill.phone;
+      this.wechat = bill.wechat;
+      this.address = bill.address;
+      this.subName = bill.subName;
+      this.shipPrice = bill.shipPrice;
+    } else {
+      this.name = this.userInfo.name;
+      this.phone = this.userInfo.phone;
+      this.wechat = this.userInfo.wechat;
+      this.address = this.userInfo.address;
+      this.subName = this.userInfo.subName;
+    }
     const rule = await this.$request("fetchRuleText", {});
     if (rule) {
       this.ruleText = rule.ruleText;
+    }
+  },
+  watch: {
+    subName: {
+      async handler(val) {
+        if (val) {
+          const shipRes = await this.$request("fetchFeeBySubName", {
+            data: {
+              subName: val,
+              productPrice: this.totalP
+            }
+          });
+          if (shipRes) {
+            this.shipPrice = Number(shipRes.price);
+          } else {
+            uni.showToast({
+              title: "运费计算失败,请联系客服",
+              icon: "none"
+            });
+          }
+        }
+      },
+      immediate: true
     }
   },
   computed: {
     ...mapState(["cart", "userInfo"]),
     productsToBuy() {
       return this.cart.filter(item => item.active);
+    },
+    totalP() {
+      let total = 0;
+      this.cart
+        .filter(item => item.active)
+        .forEach(product => {
+          total += Number(product.product.price) * product.num;
+        });
+      return total;
     },
     totalPrice() {
       let total = 0;
@@ -127,6 +180,9 @@ export default {
         .forEach(product => {
           total += Number(product.product.price) * product.num;
         });
+      if (this.shipPrice !== undefined) {
+        total += this.shipPrice;
+      }
       return total;
     }
   },
@@ -134,8 +190,20 @@ export default {
     openCalendar() {
       this.$refs.calendar.open();
     },
-    confirmDate(e) {
-      this.deliveryTime = e.fulldate;
+    async confirmDate(e) {
+      const result = await this.$request("checkDeliveryDateMakeOrder", {
+        data: {
+          deliveryDate: e.fulldate
+        }
+      });
+      if (result && result.code === 0) {
+        this.deliveryTime = e.fulldate;
+      } else {
+        uni.showToast({
+          title: "该时间不在可配送时间段,请重新选择",
+          icon: "none"
+        });
+      }
     },
     onShareAppMessage() {
       const billInfo = {
@@ -144,18 +212,19 @@ export default {
         wechat: this.wechat,
         address: this.address,
         deliveryTime: this.deliveryTime,
-        cart: this.productsToBuy
+        productsToBuy: this.productsToBuy,
+        shipPrice: this.shipPrice
       };
       return {
         title: "订单分享",
-        path: `/pages/billconfirm?billInfo=${billInfo}`
+        path: `/pages/billconfirm?billInfo=${JSON.stringify(billInfo)}`
       };
     },
     async searchGeoLocation(e) {
       const _this = this;
       const { value } = e.detail;
       if (!value) {
-        this.getLocation = undefined;
+        this.subName = "";
         return;
       }
       const geoRes = await this.$request("googleFindAddress", {
@@ -174,6 +243,7 @@ export default {
         itemList: geoRes.map(item => item.address),
         success: function(res) {
           _this.address = geoRes[res.tapIndex].address;
+          _this.subName = geoRes[res.tapIndex].subName;
           this.getLocation = geoRes[res.tapIndex];
         },
         fail: function(res) {
@@ -198,8 +268,9 @@ export default {
               icon: "none"
             });
           } else {
+            _this.address = geoRes.address;
+            _this.subName = geoRes.subName;
           }
-          console.log(geoRes);
         },
         fail: () => {
           uni.showToast({
@@ -209,39 +280,39 @@ export default {
         }
       });
     },
-    confirmPay() {
-      uni.getProvider({
-        service: "payment",
-        success: res => {
-          console.log(res);
-          const provider = res.provider[0];
-          uni.requestPayment({
-            provider: "wxpay",
-            timeStamp: String(Date.now()),
-            nonceStr: Math.random()
-              .toString(36)
-              .substr(2, 15),
-            success: res => {
-              console.log(res);
-            },
-            fail: err => {
-              uni.showToast({
-                title: "支付失败",
-                icon: "none"
-              });
-              console.log(err);
-            }
-          });
-        },
-        fail: err => {
-          uni.showToast({
-            title: "获取服务商失败",
-            icon: "none"
-          });
+    verifyCode(e) {
+      if (this.veriMatch) {
+        this.veriPass = e.detail.value === this.veriMatch;
+      }
+    },
+    async getVeriCode() {
+      const veriRes = await this.$request("phoneSendVaildMessage", {
+        loading: true,
+        data: {
+          phone: formatPhoneNumber(this.phone)
         }
       });
+      if (veriRes) {
+        uni.showToast({
+          title: "发送验证码成功"
+        });
+        this.veriMatch = String(veriRes);
+      } else {
+        uni.showToast({
+          title: "获取验证码失败",
+          icon: "none"
+        });
+      }
+    },
+    async confirmPay() {
+      if (!this.userInfo) {
+        uni.showToast({
+          title: "请先登录",
+          icon: "none"
+        });
+        return;
+      }
 
-      return;
       const _this = this;
       let errorMsg = "";
       if (!this.name) {
@@ -253,11 +324,20 @@ export default {
       if (!this.wechat) {
         errorMsg = "请输入微信号";
       }
-      if (!this.geoLocation) {
+      if (!this.address) {
         errorMsg = "请选择地址";
       }
       if (!this.deliveryTime) {
         errorMsg = "请选择送货时间";
+      }
+      if (!this.veriMatch) {
+        errorMsg = "请输入正确的手机验证码";
+      }
+      if (!this.subName) {
+        errorMsg = "请选取有效地址";
+      }
+      if (typeof this.shipPrice === "undefined") {
+        errorMsg = "如无法计算运费请联系客服";
       }
       if (errorMsg) {
         uni.showToast({
@@ -266,21 +346,49 @@ export default {
         });
         return;
       }
-      uni.showModal({
-        title: "支付确认",
-        content: "确认要支付这笔订单吗?",
-        success: function(res) {
-          if (res.confirm) {
-            console.log(_this);
-            uni.requestPayment({
-              provider: "wxpay",
-              timeStamp: String(Date.now())
-            });
-          } else if (res.cancel) {
-            console.log("用户点击取消");
-          }
+
+      const billInfo = await this.$request("addNewOrder", {
+        loading: true,
+        data: {
+          belongUserId: this.userInfo.id,
+          name: this.name,
+          phone: this.phone,
+          wechat: this.wechat,
+          address: this.address,
+          subName: this.subName,
+          price: this.totalPrice,
+          deliveryDate: this.deliveryTime,
+          orderDetail: this.productsToBuy.map(item => {
+            return {
+              ...item.product,
+              buyNum: item.num
+            };
+          })
         }
       });
+      const bill = checkBill(billInfo);
+      if (bill) {
+        this.$store.commit("changePendingBill", bill);
+        uni.navigateTo({
+          url: "/pages/pay"
+        });
+      }
+
+      // uni.showModal({
+      //   title: "支付确认",
+      //   content: "确认要支付这笔订单吗?",
+      //   success: function(res) {
+      //     if (res.confirm) {
+      //       console.log(_this);
+      //       uni.requestPayment({
+      //         provider: "wxpay",
+      //         timeStamp: String(Date.now())
+      //       });
+      //     } else if (res.cancel) {
+      //       console.log("用户点击取消");
+      //     }
+      //   }
+      // });
     }
   }
 };
@@ -296,6 +404,12 @@ export default {
     width: 330rpx;
     border-left: 2rpx solid #f0f0f0;
     display: flex;
+    .pass {
+      color: rgb(21, 201, 45);
+    }
+    .fail {
+      color: red;
+    }
     .get {
       min-width: 140rpx;
       color: #1d90fc;
@@ -341,7 +455,7 @@ export default {
       align-items: center;
       padding: 30rpx;
       .price {
-        margin-left: 20rpx;
+        margin: 0 20rpx;
         color: #fcd81d;
       }
     }

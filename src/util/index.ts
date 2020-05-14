@@ -80,7 +80,8 @@ export function request(url: string, param: IRequestParam) {
                 icon: "none",
               });
             }
-            resolve(getIn(res, "data", "data") || res.data);
+            const data = getIn(res, "data", "data");
+            resolve(getIn(res, "data", "data") === undefined ? res.data : data);
           } else {
             if (param && param.errorMsg) {
               uni.showToast({
@@ -112,4 +113,73 @@ export function request(url: string, param: IRequestParam) {
       resolve("");
     }
   });
+}
+
+export function formatPhoneNumber(phone) {
+  const returnPhone = phone.startsWith("0") ? phone.substr(1) : phone;
+  return "+61" + returnPhone;
+}
+
+export function debounce(func, wait) {
+  let timer;
+  return function() {
+    let _this = this; // 注意 this 指向
+    let args = arguments; // arguments中存着e
+
+    if (timer) clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      func.apply(_this, args);
+    }, wait);
+  };
+}
+export function throttle(func, wait) {
+  let _this = this;
+  let args = arguments;
+  let previous = 0;
+  return function() {
+    let now = Date.now();
+    console.log("now", now);
+    console.log("previous", previous);
+    console.log("gap", now - previous);
+    if (now - previous > wait) {
+      console.log("wait");
+      func.apply(_this, args);
+      previous = now;
+    }
+  };
+}
+
+export function checkBill(result) {
+  if (result) {
+    if (result.errMsg) {
+      uni.showToast({
+        title: "您已被禁用",
+        icon: "none",
+      });
+      return false;
+    }
+    let failReason = "";
+    if (Object.prototype.toString.call(result) === "[object Array]") {
+      result.forEach((res) => {
+        if (res.reason !== "OK") {
+          failReason = `${res.title}${res.reason}`;
+        }
+      });
+    }
+    if (failReason) {
+      uni.showToast({
+        title: failReason,
+        icon: "none",
+      });
+      return false;
+    }
+    return result;
+  } else {
+    uni.showToast({
+      title: "检查订单失败",
+      icon: "none",
+    });
+    return false;
+  }
 }

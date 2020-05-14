@@ -1,8 +1,12 @@
 <template>
   <div class="bg">
     <div class="top">
+      <image src="/static/me_bg.png" class="bg-img" mode="heightFix" />
       <block v-if="userInfo">
-        <image :src="userInfo.avatar" style="width:120rpx;border-radius:50%;" mode="widthFix" />
+        <div class="avatar">
+          <open-data type="userAvatarUrl"></open-data>
+        </div>
+        <!-- <image :src="userInfo.avatar" style="width:120rpx;border-radius:50%;" mode="widthFix" /> -->
         <div class="text">{{userInfo.username}}</div>
       </block>
       <block v-else>
@@ -11,7 +15,7 @@
         <image src="/static/youjiantou.png" style="width:40rpx;margin-top:6rpx" mode="widthFix" />
       </block>
     </div>
-    <div class="white-card bill-section">
+    <div class="white-card bill-section" v-if="userInfo">
       <div class="section-title">我的订单</div>
       <div class="bill-list">
         <div v-for="item in menu" :key="item.title" class="item" @click="navigateBill(item.title)">
@@ -23,15 +27,18 @@
     <div class="gap"></div>
     <div class="white-card service-section">
       <div class="section-title">我的服务</div>
-      <div class="row" v-for="item in menu2" :key="item.title">
-        <div class="left">
-          <image style="width:60rpx;" :src="item.icon" mode="widthFix" />
-          {{item.title}}
+      <block v-for="item in menu2" :key="item.title">
+        <div class="row" v-if="userInfo || item.title==='联系客服'" @click="navigateService(item.url)">
+          <div class="left">
+            <image style="width:60rpx;" :src="item.icon" mode="widthFix" />
+            {{item.title}}
+          </div>
+          <div>
+            <image style="width:30rpx;" src="/static/youjiantou-gray.png" mode="widthFix" />
+          </div>
+          <button open-type="contact" v-if="item.title==='联系客服'" class="hidden-btn"></button>
         </div>
-        <div>
-          <image style="width:30rpx;" src="/static/youjiantou-gray.png" mode="widthFix" />
-        </div>
-      </div>
+      </block>
     </div>
   </div>
 </template>
@@ -66,15 +73,18 @@ export default {
       menu2: [
         {
           icon: "/static/wodexiangqing.png",
-          title: "我的详情"
+          title: "我的详情",
+          url: "/pages/myinfo"
         },
         {
           icon: "/static/liulanlishi.png",
-          title: "浏览历史"
+          title: "浏览历史",
+          url: "/pages/history"
         },
         {
           icon: "/static/wodeshoucang.png",
-          title: "我的收藏"
+          title: "我的收藏",
+          url: "/pages/favorite"
         },
         {
           icon: "/static/lianxikefu.png",
@@ -94,6 +104,14 @@ export default {
       uni.navigateTo({
         url: `/pages/bill?type=${title}`
       });
+    },
+    navigateService(url) {
+      if (url) {
+        console.log(url);
+        uni.navigateTo({
+          url
+        });
+      }
     }
   }
 };
@@ -107,17 +125,33 @@ export default {
   align-items: center;
   padding: 30rpx 30rpx 0;
   height: 280rpx;
-  background: url("/static/me_bg.png") no-repeat;
+  position: relative;
+  overflow: hidden;
+  .avatar {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .bg-img {
+    height: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+  }
   .text {
     font-size: 35rpx;
     color: #fff;
     padding: 0 10rpx 0 30rpx;
+    z-index: 1;
   }
 }
 
 .service-section {
   padding: 20rpx 20rpx 0 20rpx;
   .row {
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -129,6 +163,14 @@ export default {
       image {
         margin-right: 20rpx;
       }
+    }
+    .hidden-btn {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
     }
   }
 }

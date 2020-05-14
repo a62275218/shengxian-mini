@@ -1,8 +1,8 @@
 <template>
   <div class="product" @click="goDetail(item.id)">
     <div class="item" :style="{height}">
-      <div class="tag" style="width:70rpx;">
-        <image src="/static/tag.png" style="width:100%;" mode="widthFix" />
+      <div class="tag" >
+        <image src="/static/tag.png" style="width:100%;height:100%;" />
         <div class="font">{{item.tagName.slice(0,2)}}</div>
       </div>
       <div class="img" :style="{height:imgHeight}">
@@ -48,6 +48,8 @@ export default {
       top: 20rpx;
       left: 20rpx;
       z-index: 200;
+      width:70rpx;
+      height:84rpx;
       .font {
         width: 60%;
         text-align: center;

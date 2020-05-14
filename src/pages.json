@@ -15,7 +15,10 @@
     {
       "path": "pages/product",
       "style": {
-        "navigationBarTitleText": "产品详情"
+        "navigationBarTitleText": "产品详情",
+        "usingComponents": {
+          "painter": "/wxcomponents/painter/painter"
+        }
       }
     },
     {
@@ -36,10 +39,41 @@
         "navigationStyle": "custom"
       }
     },
+
+    {
+      "path": "pages/myinfo",
+      "style": {
+        "navigationBarTitleText": "我的信息"
+      }
+    },
+    {
+      "path": "pages/history",
+      "style": {
+        "navigationBarTitleText": "浏览历史"
+      }
+    },
+    {
+      "path": "pages/favorite",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
+      }
+    },
     {
       "path": "pages/bill",
       "style": {
         "navigationBarTitleText": "订单"
+      }
+    },
+    {
+      "path": "pages/pay",
+      "style": {
+        "navigationBarTitleText": "支付订单"
+      }
+    },
+    {
+      "path": "pages/payresult",
+      "style": {
+        "navigationBarTitleText": "支付成功"
       }
     },
     {

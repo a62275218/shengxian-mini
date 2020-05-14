@@ -10,10 +10,12 @@ Vue.use(Vuex);
 
 const store = new Vuex.Store({
   state: {
-    userInfo: false,
+    userInfo: uni.getStorageSync("userInfo") || false,
     productList: [],
     filterProductList: [],
     cart: [],
+    historyList: [],
+    pendingBill: false,
   },
   actions: {
     fetchProductList: async ({ state, commit }, payload) => {
@@ -42,9 +44,9 @@ const store = new Vuex.Store({
       if (!payload) {
         uni.showToast({
           title: "获取用户信息失败",
-          icon: "none"
+          icon: "none",
         });
-        return
+        return;
       }
       const { avatarUrl, nickName } = payload;
       uni.login({
@@ -87,26 +89,51 @@ const store = new Vuex.Store({
         commit("updateUser", userInfo);
       }
     },
-  },
-  mutations: {
-    retriveUser: (state) => {
+    retriveUser: async ({ state, commit }, payload) => {
       const userInfo = uni.getStorageSync("userInfo");
       if (userInfo) {
-        state.userInfo = userInfo;
+        const newUser = await request("fetchUserDetailById", {
+          data: {
+            openId: userInfo.openId,
+          },
+        });
+        commit("updateUser", newUser);
       }
     },
+  },
+  mutations: {
     retriveCart: (state) => {
       const cart = uni.getStorageSync("cart") || [];
       state.cart = cart;
     },
+    addHistory: (state, payload) => {
+      const product = state.historyList.find((item) => {
+        return item.id === payload.id;
+      });
+      if (product) {
+        return;
+      }
+      state.historyList.unshift({ ...payload, recordTime: Date.now() });
+      uni.setStorageSync("historyList", state.historyList);
+    },
+    retriveHistory: (state) => {
+      const historyList = uni.getStorageSync("historyList");
+      if (historyList) {
+        //展示14天的
+        const filteredList = historyList.filter((item) => {
+          return Date.now() - item.recordTime < 14 * 24 * 3600 * 1000;
+        });
+        state.historyList = filteredList;
+        uni.setStorageSync("historyList", state.historyList);
+      }
+    },
     addCart: (state, payload) => {
-      const { product, num } = payload;
-      console.log(state);
+      const { product, num,immediateToBuy } = payload;
       const existCart = state.cart.find((item) => {
         return item.product.id === product.id;
       });
       if (!existCart) {
-        state.cart.push({ product, num });
+        state.cart.push({ product, num, active: true });
       } else {
         existCart.num += num;
       }
@@ -115,6 +142,9 @@ const store = new Vuex.Store({
       });
       uni.setStorageSync("cart", state.cart);
     },
+    changePendingBill: (state, payload) => {
+      state.pendingBill = payload;
+    },
     clearCart: (state) => {
       state.cart = [];
       uni.removeStorageSync("cart");
@@ -122,15 +152,16 @@ const store = new Vuex.Store({
     changeCart: (state, payload) => {
       const { index, active, num } = payload;
       const cart = state.cart;
-      if(index === 'all'){
-        cart.forEach(item=>{
-          item.active = active
-        })
+      if (index === "all") {
+        cart.forEach((item) => {
+          item.active = active;
+        });
         state.cart = cart;
-        return
+        return;
       }
       if (typeof active !== "undefined") {
         cart[index].active = active;
+        console.log(cart);
       }
       if (typeof num !== "undefined") {
         cart[index].num = num;
@@ -149,6 +180,16 @@ const store = new Vuex.Store({
         state.cart.splice(index, 1);
         uni.setStorageSync("cart", state.cart);
       }
+    },
+    batchRemoveFromCart: (state, idList) => {
+      const newCart = state.cart.filter((item) => {
+        const exist = idList.find(id=>{
+          Number(id) == item.id
+        })
+        return !exist;
+      });
+      state.cart = newCart
+      uni.setStorageSync("cart", newCart);
     },
     updateUser: (state, newUser) => {
       state.userInfo = newUser;

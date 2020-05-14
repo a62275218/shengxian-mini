@@ -10,7 +10,7 @@
       >{{item.name}}</div>
     </div>
     <scroll-view class="content" scroll-y="true">
-      <div v-if="!subloading && !subcategory.length" class="notfound">暂无内容</div>
+      <div v-if="!subloading && !subcategory.length" class="empty">暂无内容</div>
       <skeleton :config="[{row:7},{row:7},{row:7}]" :loading="subloading">
         <div class="sublist">
           <div class="subitem" @click="goList(item.id)" v-for="item in subcategory" :key="item.id">

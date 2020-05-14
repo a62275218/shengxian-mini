@@ -3,18 +3,16 @@ import Vue from "vue";
 import { getIn } from "@/util";
 export default Vue.extend({
   mpType: "app",
-  onLaunch() {
-  },
-  methods: {
-
-  },
+  onLaunch() {},
+  methods: {},
   onLoad() {
     console.log("load");
   },
   onShow() {
-    this.$store.commit('retriveUser')
-    this.$store.dispatch('fetchTotalList')
-    this.$store.commit('retriveCart')
+    this.$store.dispatch("retriveUser");
+    this.$store.dispatch("fetchTotalList");
+    this.$store.commit("retriveCart");
+    this.$store.commit("retriveHistory");
   },
   onHide() {
     console.log("App Hide");

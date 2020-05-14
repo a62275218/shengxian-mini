@@ -42,7 +42,7 @@
             <div class="deliveryImg" @click="preview(bill.deliveryImg)">送货图片</div>
             <div class="control">
               <div class="cancel btn">取消订单</div>
-              <div class="pay btn">立即支付</div>
+              <div class="pay btn" @click="goPayment(bill)">立即支付</div>
             </div>
           </div>
         </div>
@@ -55,6 +55,7 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 export default {
   data() {
     return {
@@ -70,6 +71,9 @@ export default {
       loading: true
     };
   },
+  computed: {
+    ...mapState(["userInfo"])
+  },
   onShow() {
     const { type } = this.$mp.query;
     this.defaultIndex = this.list.findIndex((item, index) => {
@@ -77,12 +81,18 @@ export default {
     });
   },
   methods: {
+    goPayment(bill) {
+      this.$store.commit("changePendingBill", bill);
+      uni.navigateTo({
+        url: "/pages/pay"
+      });
+    },
     async getBillList(index) {
       this.loading = true;
       const label = this.list[index].label;
       const billRes = await this.$request("fetchOrderByUserIdAndStatus", {
         data: {
-          id: 1,
+          id: this.userInfo.id,
           status: label
         }
       });
