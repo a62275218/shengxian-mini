@@ -130,7 +130,7 @@ export default {
       this.address = this.userInfo.address;
       this.subName = this.userInfo.subName;
       this.veriPass = Boolean(this.userInfo.phone);
-      console.log(this.userInfo)
+      console.log(this.userInfo);
     }
     const rule = await this.$request("fetchRuleText", {});
     if (rule) {
@@ -140,7 +140,7 @@ export default {
   watch: {
     subName: {
       async handler(val) {
-        console.log(val)
+        console.log(val);
         if (val) {
           const shipRes = await this.$request("fetchFeeBySubName", {
             data: {
@@ -370,6 +370,14 @@ export default {
       });
       const bill = checkBill(billInfo);
       if (bill) {
+        if (bill.orderDetail) {
+          this.$store.commit(
+            "batchRemoveFromCart",
+            bill.orderDetail.map(item => {
+              return item.id;
+            })
+          );
+        }
         this.$store.commit("changePendingBill", bill);
         uni.navigateTo({
           url: "/pages/pay"

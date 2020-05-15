@@ -1,7 +1,11 @@
 <template>
   <div class="bg">
     <div v-if="!cart.length" class="empty">
-      <image src="/static/cart-empty.png" style="display:block;width:200rpx;margin:0 auto;" mode="widthFix" />
+      <image
+        src="/static/cart-empty.png"
+        style="display:block;width:200rpx;margin:0 auto;"
+        mode="widthFix"
+      />
       <div>购物车空空如也</div>
     </div>
     <block v-for="(item,index) in cart" :key="item.product.id">
@@ -21,9 +25,10 @@
       <div class="gap"></div>
     </block>
     <div class="bottom-control white-card" v-if="cart.length">
-      <div class="select-all" @click="toggleSelectAll">
-        <div :class="[{'active button':selectAll},{'button':!selectAll}]"></div>
-        <div>全选</div>
+      <div class="select-all">
+        <div @click="toggleSelectAll" :class="[{'active button':selectAll},{'button':!selectAll}]"></div>
+        <div @click="toggleSelectAll">全选</div>
+        <div class="del" @click="handleDel">删除</div>
       </div>
       <div class="action">
         <div class="price">${{totalPrice}}</div>
@@ -119,6 +124,27 @@ export default {
         });
       }
     },
+    handleDel() {
+      const _this = this
+      uni.showModal({
+        title: "提示", //提示的标题,
+        content: "确认要删除选中产品吗?", //提示的内容,
+        success: res => {
+          if (res.confirm) {
+            _this.$store.commit(
+              "batchRemoveFromCart",
+              _this.cart
+                .filter(item => {
+                  return item.active;
+                })
+                .map(i => i.product.id)
+            );
+          } else if (res.cancel) {
+            console.log("用户点击取消");
+          }
+        }
+      });
+    },
     changeNum(num, index) {
       this.$store.commit("changeCart", {
         index,
@@ -199,6 +225,10 @@ export default {
     display: flex;
     align-items: center;
     padding: 0 30rpx;
+  }
+  .del {
+    color: $uni-color-error;
+    padding-left: 40rpx;
   }
   .button {
     width: 40rpx;

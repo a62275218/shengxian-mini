@@ -184,7 +184,7 @@ const store = new Vuex.Store({
     batchRemoveFromCart: (state, idList) => {
       const newCart = state.cart.filter((item) => {
         const exist = idList.find(id=>{
-          Number(id) == item.id
+          return Number(id) == Number(item.product.id)
         })
         return !exist;
       });

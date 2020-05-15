@@ -98,7 +98,8 @@ import { checkBill } from "@/util";
 export default {
   data() {
     return {
-      payMode: ""
+      payMode: "",
+      enablePay:true
     };
   },
   computed: {
@@ -118,16 +119,21 @@ export default {
       });
     },
     payBill() {
+      if(!this.enablePay){
+        return
+      }
       const _this = this;
+      this.enablePay = false
       uni.getProvider({
         service: "payment",
         success: async res => {
           const provider = res.provider[0];
           const royalPayRes = await _this.$request("royalpaySign", {
+            loading:true,
             data: {
               timeStamp: Date.now(),
               orderId: this.pendingBill.orderId,
-              price: this.pendingBill.totalPrice,
+              price: this.pendingBill.price,
               openId: this.userInfo.openId
             }
           });
@@ -143,12 +149,13 @@ export default {
               signType,
               paySign,
               success: res => {
-                _this.$store.commit(
-                  "batchRemoveFromCart",
-                  _this.pendingBill.orderDetail.map(item => {
-                    return item.id;
-                  })
-                );
+                // _this.$store.commit(
+                //   "batchRemoveFromCart",
+                //   _this.pendingBill.orderDetail.map(item => {
+                //     return item.id;
+                //   })
+                // );
+                this.enablePay = true
                 uni.reLaunch({ url: "/pages/payresult" });
               },
               fail: err => {
@@ -156,7 +163,7 @@ export default {
                   title: "支付失败",
                   icon: "none"
                 });
-                console.log(err);
+                this.enablePay = true
               }
             });
           } else {
@@ -164,6 +171,7 @@ export default {
               title: "支付失败",
               icon: "none"
             });
+            this.enablePay = true
           }
         },
         fail: err => {
@@ -171,6 +179,7 @@ export default {
             title: "获取服务商失败",
             icon: "none"
           });
+          this.enablePay = true
         }
       });
     }
