@@ -64,7 +64,7 @@
               实付
               <span class="price">
                 <span style="font-size:24rpx;">$</span>
-                {{pendingBill.totalPrice}}
+                {{pendingBill.price}}
               </span>
             </div>
           </div>
@@ -74,7 +74,8 @@
       <div class="row-card" @click="paymentWay">
         <div class="row">
           <div class="title">支付方式</div>
-          <div>
+          <div style="display:flex;align-items:center">
+            <div style="margin-right:20rpx;">{{payMode}}</div>
             <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
           </div>
         </div>
@@ -142,9 +143,12 @@ export default {
               signType,
               paySign,
               success: res => {
-                _this.$store.commit('batchRemoveFromCart',_this.pendingBill.orderDetail.map(item=>{
-                  return item.id
-                }))
+                _this.$store.commit(
+                  "batchRemoveFromCart",
+                  _this.pendingBill.orderDetail.map(item => {
+                    return item.id;
+                  })
+                );
                 uni.reLaunch({ url: "/pages/payresult" });
               },
               fail: err => {

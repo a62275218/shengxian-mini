@@ -12,6 +12,15 @@
           <div class="title">电话</div>
           <input type="text" v-model="phone" />
         </div>
+        <div class="veriCode">
+          <input
+            :class="{'pass':veriPass,'fail':!veriPass}"
+            type="text"
+            v-model="veriCode"
+            @input="verifyCode"
+          />
+          <div class="get" @click="getVeriCode">获取验证码</div>
+        </div>
       </div>
       <div class="row">
         <div class="input">
@@ -25,7 +34,8 @@
           <textarea
             placeholder="为了计算运费，请输入后手动选择地址或者直接获取当前地址"
             type="text"
-            style="width:90%;height:120rpx;"
+            style="width:90%"
+            :auto-height="true"
             v-model="address"
             @blur="searchGeoLocation"
           />
@@ -42,6 +52,7 @@
 
 <script>
 import { mapState } from "vuex";
+import { formatPhoneNumber } from "@/util";
 export default {
   data() {
     return {
@@ -49,7 +60,10 @@ export default {
       phone: "",
       wechat: "",
       address: "",
-      subName: ""
+      subName: "",
+      veriPass: false,
+      veriCode: "",
+      veriMatch: ""
     };
   },
   computed: {
@@ -94,6 +108,11 @@ export default {
         }
       });
     },
+    verifyCode(e) {
+      if (this.veriMatch) {
+        this.veriPass = e.detail.value === this.veriMatch;
+      }
+    },
     getLocation() {
       const _this = this;
       uni.getLocation({
@@ -123,16 +142,43 @@ export default {
         }
       });
     },
+    async getVeriCode() {
+      const veriRes = await this.$request("phoneSendVaildMessage", {
+        loading: true,
+        data: {
+          phone: formatPhoneNumber(this.phone)
+        }
+      });
+      if (veriRes) {
+        uni.showToast({
+          title: "发送验证码成功"
+        });
+        this.veriMatch = String(veriRes);
+      } else {
+        uni.showToast({
+          title: "获取验证码失败",
+          icon: "none"
+        });
+      }
+    },
     async changeUser() {
       if (this.address) {
         if (!this.subName) {
           uni.showToast({
             title: "请选择有效地址",
-            icon:'none'
+            icon: "none"
           });
           return;
         }
       }
+      if (this.phone !== this.userInfo.phone && !this.veriPass) {
+        uni.showToast({
+          title: "请输入有效的验证码",
+          icon: "none"
+        });
+        return;
+      }
+      console.log(this.veriPass);
       const newUser = await this.$request("updateUserDetailById", {
         loading: true,
         data: {
@@ -174,6 +220,24 @@ export default {
     border-radius: 20rpx;
     text-align: center;
     width: 200rpx;
+  }
+  .veriCode {
+    box-sizing: border-box;
+    padding: 10rpx 20rpx;
+    min-width: 330rpx;
+    width: 330rpx;
+    border-left: 2rpx solid #f0f0f0;
+    display: flex;
+    .pass {
+      color: rgb(21, 201, 45);
+    }
+    .fail {
+      color: red;
+    }
+    .get {
+      min-width: 140rpx;
+      color: #1d90fc;
+    }
   }
 }
 </style>

@@ -7,12 +7,8 @@
       <skeleton :config="[{row:3},{row:3}]" :loading="bannerLoading">
         <swiper style="height:380rpx">
           <block v-for="item in banners" :key="item.id">
-            <swiper-item>
-              <imagep
-                :src="item.imgUrl"
-                @click="goProduct(item.param)"
-                @load="(item)=>handleLoad(item)"
-              />
+            <swiper-item @click="goProduct(item)">
+              <imagep :src="item.imgUrl" @load="(item)=>handleLoad(item)" />
             </swiper-item>
           </block>
         </swiper>
@@ -92,10 +88,7 @@ export default Vue.extend({
   computed: {
     ...mapState(["userInfo"])
   },
-  onLoad() {
-    console.log(this.$store);
-  },
-  async onShow() {
+  async onLoad() {
     this.fetchHomePageCategories();
     this.fetchAds();
     this.fetchProducts();
@@ -133,9 +126,14 @@ export default Vue.extend({
         url: `/pages/productlist?tagid=${id}`
       });
     },
-    goProduct(id) {
-      if (id) {
-        uni.navigateTo({ url: `/pages/product?id=${id}` });
+    goProduct(payload) {
+      const {param,type} = payload
+      if (type === '商品') {
+        uni.navigateTo({ url: `/pages/product?id=${param}` });
+      }else if (type === '小程序'){
+        uni.navigateToMiniProgram({
+          appId:param
+        })
       }
     },
     async fetchBanner() {

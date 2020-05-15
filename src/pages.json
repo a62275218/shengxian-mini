@@ -15,10 +15,7 @@
     {
       "path": "pages/product",
       "style": {
-        "navigationBarTitleText": "产品详情",
-        "usingComponents": {
-          "painter": "/wxcomponents/painter/painter"
-        }
+        "navigationBarTitleText": "产品详情"
       }
     },
     {

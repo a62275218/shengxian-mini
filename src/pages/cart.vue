@@ -1,6 +1,9 @@
 <template>
   <div class="bg">
-    <div v-if="!cart.length" class="empty">购物车空空如也</div>
+    <div v-if="!cart.length" class="empty">
+      <image src="/static/cart-empty.png" style="display:block;width:200rpx;margin:0 auto;" mode="widthFix" />
+      <div>购物车空空如也</div>
+    </div>
     <block v-for="(item,index) in cart" :key="item.product.id">
       <div class="white-card item" @click="toggleActive(index)">
         <div :class="[{'active button':item.active},{'button':!item.active}]" />

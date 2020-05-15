@@ -32,7 +32,7 @@
                   实付
                   <span class="price">
                     <span style="font-size:24rpx;">$</span>
-                    {{bill.totalPrice}}
+                    {{bill.price}}
                   </span>
                 </div>
               </div>

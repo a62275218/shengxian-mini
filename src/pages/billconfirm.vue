@@ -20,7 +20,7 @@
             v-model="veriCode"
             @input="verifyCode"
           />
-          <div class="get" @click="getVeriCode" v-if="!share">获取验证码</div>
+          <div class="get" @click="getVeriCode" v-if="!share && !userInfo.phone">获取验证码</div>
         </div>
       </div>
       <div class="row">
@@ -35,7 +35,8 @@
           <textarea
             placeholder="为了计算运费，请输入后手动选择地址或者直接获取当前地址"
             type="text"
-            style="width:90%;height:120rpx;"
+            style="width:90%;"
+            :auto-height="true"
             v-model="address"
             @blur="searchGeoLocation"
           />
@@ -83,9 +84,7 @@
       <div class="left">
         实付
         <div class="price">${{totalPrice}}</div>
-        <span
-          style="font-size:24rpx;"
-        >{{shipPrice !== undefined?`(包含运费:$${shipPrice})`:`请选择地址计算运费`}}</span>
+        <span style="font-size:24rpx;">{{!isNaN(shipPrice)?`(包含运费:$${shipPrice})`:`请选择地址计算运费`}}</span>
       </div>
       <div class="confirm" @click="confirmPay" v-if="!share">立即支付</div>
     </div>
@@ -107,7 +106,7 @@ export default {
       deliveryTime: "",
       ruleText: "",
       subName: "",
-      shipPrice: undefined,
+      shipPrice: null,
       veriPass: false,
       geoLocation: undefined,
       share: false
@@ -123,13 +122,15 @@ export default {
       this.wechat = bill.wechat;
       this.address = bill.address;
       this.subName = bill.subName;
-      this.shipPrice = bill.shipPrice;
+      this.shipPrice = Number(bill.shipPrice);
     } else {
       this.name = this.userInfo.name;
       this.phone = this.userInfo.phone;
       this.wechat = this.userInfo.wechat;
       this.address = this.userInfo.address;
       this.subName = this.userInfo.subName;
+      this.veriPass = Boolean(this.userInfo.phone);
+      console.log(this.userInfo)
     }
     const rule = await this.$request("fetchRuleText", {});
     if (rule) {
@@ -139,6 +140,7 @@ export default {
   watch: {
     subName: {
       async handler(val) {
+        console.log(val)
         if (val) {
           const shipRes = await this.$request("fetchFeeBySubName", {
             data: {
@@ -147,7 +149,7 @@ export default {
             }
           });
           if (shipRes) {
-            this.shipPrice = Number(shipRes.price);
+            this.shipPrice = Number(shipRes);
           } else {
             uni.showToast({
               title: "运费计算失败,请联系客服",
@@ -169,7 +171,7 @@ export default {
       this.cart
         .filter(item => item.active)
         .forEach(product => {
-          total += Number(product.product.price) * product.num;
+          total += Number(product.product.price) * Number(product.num);
         });
       return total;
     },
@@ -178,10 +180,10 @@ export default {
       this.cart
         .filter(item => item.active)
         .forEach(product => {
-          total += Number(product.product.price) * product.num;
+          total += Number(product.product.price) * Number(product.num);
         });
-      if (this.shipPrice !== undefined) {
-        total += this.shipPrice;
+      if (!isNaN(this.shipPrice)) {
+        total += Number(this.shipPrice);
       }
       return total;
     }
@@ -244,7 +246,7 @@ export default {
         success: function(res) {
           _this.address = geoRes[res.tapIndex].address;
           _this.subName = geoRes[res.tapIndex].subName;
-          this.getLocation = geoRes[res.tapIndex];
+          _this.getLocation = geoRes[res.tapIndex];
         },
         fail: function(res) {
           console.log(res.errMsg);
@@ -330,13 +332,13 @@ export default {
       if (!this.deliveryTime) {
         errorMsg = "请选择送货时间";
       }
-      if (!this.veriMatch) {
+      if (!this.veriPass) {
         errorMsg = "请输入正确的手机验证码";
       }
       if (!this.subName) {
         errorMsg = "请选取有效地址";
       }
-      if (typeof this.shipPrice === "undefined") {
+      if (isNaN(this.shipPrice)) {
         errorMsg = "如无法计算运费请联系客服";
       }
       if (errorMsg) {

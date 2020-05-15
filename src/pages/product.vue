@@ -402,7 +402,8 @@ export default {
   display: flex;
   justify-content: space-between;
   font-size: 28rpx;
-  height: 100rpx;
+  height: 130rpx;
+  align-items: center;
   .share {
     box-sizing: border-box;
     height: 50rpx;
