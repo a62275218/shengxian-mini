@@ -80,31 +80,69 @@
           </div>
         </div>
       </div>
+      <div class="gap"></div>
+      <div class="white-card pay-desc" v-if="payMode !=='RoyalPay' && payMode">
+        <block v-if="payMode ==='银行卡转账'">
+          <div>请务必截图，以便上传支付凭证</div>
+          <div>Commonwealth Bank</div>
+          <div class="row">
+            <div>Name: fresh go</div>
+            <div class="copy" @click="copy('fresh go')">点此复制</div>
+          </div>
+          <div class="row">
+            <div>BSB: 063109</div>
+            <div class="copy" @click="copy('063109')">点此复制</div>
+          </div>
+          <div class="row">
+            <div>Account: 13315633</div>
+            <div class="copy" @click="copy('13315633')">点此复制</div>
+          </div>
+          <button class="button" @click="uploadPay">上传支付凭证</button>
+        </block>
+        <block v-else-if="payMode ==='人民币支付'">
+          <div>人民币支付 实时汇率 零手续费</div>
+          <div>扫描一下二维码支付</div>
+          <button class="button" @click="uploadPay">上传支付凭证</button>
+        </block>
+        <block v-else-if="payMode ==='货到付款'">
+          <div>货到付款 只支持现金支付</div>
+          <div>请确保送货当天您家中有人收货</div>
+          <div>请您提前准备现金</div>
+          <button class="button" @click="confirmProductArrival">确认下单</button>
+        </block>
+        <button open-type="contact" class="button">联系客服</button>
+        <div style="10rpx;"></div>
+        <div class="row" v-for="(item,index) in serviceList" :key="item.id">
+          <div>客服微信{{index+1}}: {{item.wxId}}</div>
+          <div class="copy" @click="copy(item.wxId)">点此复制</div>
+        </div>
+      </div>
       <div class="page-gap"></div>
       <div class="page-gap"></div>
       <div class="page-gap"></div>
-      <div class="bottom-control">
-        <div class="left">{{payMode?'':'请在订单底部选择支付方式'}}</div>
-        <div class="confirm" v-if="payMode==='微信支付'" @click="payBill">立即支付</div>
+      <div class="bottom-control" v-if="payMode==='RoyalPay' || !payMode">
+        <div class="left">{{payMode?'手续费 0.88%':'请在订单底部选择支付方式'}}</div>
+        <div class="confirm" v-if="payMode==='RoyalPay'" @click="payBill">立即支付</div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-const payConfig = ["微信支付", "银行转账"];
+const payConfig = ["RoyalPay", "银行卡转账", "RMB支付", "货到付款"];
 import { mapState } from "vuex";
 import { checkBill } from "@/util";
 export default {
   data() {
     return {
       payMode: "",
-      enablePay:true
+      enablePay: true
     };
   },
   computed: {
-    ...mapState(["pendingBill", "userInfo"])
+    ...mapState(["pendingBill", "userInfo", "serviceList"])
   },
+
   methods: {
     paymentWay() {
       const _this = this;
@@ -118,18 +156,43 @@ export default {
         }
       });
     },
-    payBill() {
-      if(!this.enablePay){
-        return
+    updateOrder() {
+      this.$request("updateOrder", {
+        data: {
+          orderId: this.pendingBill.orderId,
+          paymentWay: this.payMode,
+          status: "配送中"
+        }
+      });
+    },
+    async confirmProductArrival() {
+      const res = await this.$request("updateOrder", {
+        loading: true,
+        data: {
+          orderId: this.pendingBill.orderId,
+          paymentWay: this.payMode,
+          status: "配送中"
+        }
+      });
+      if (res) {
+        uni.showToast({
+          title: "确认成功"
+        });
       }
+    },
+    payBill() {
+      if (!this.enablePay) {
+        return;
+      }
+      this.updateOrder();
       const _this = this;
-      this.enablePay = false
+      this.enablePay = false;
       uni.getProvider({
         service: "payment",
         success: async res => {
           const provider = res.provider[0];
           const royalPayRes = await _this.$request("royalpaySign", {
-            loading:true,
+            loading: true,
             data: {
               timeStamp: Date.now(),
               orderId: this.pendingBill.orderId,
@@ -155,7 +218,7 @@ export default {
                 //     return item.id;
                 //   })
                 // );
-                this.enablePay = true
+                this.enablePay = true;
                 uni.reLaunch({ url: "/pages/payresult" });
               },
               fail: err => {
@@ -163,7 +226,7 @@ export default {
                   title: "支付失败",
                   icon: "none"
                 });
-                this.enablePay = true
+                this.enablePay = true;
               }
             });
           } else {
@@ -171,7 +234,7 @@ export default {
               title: "支付失败",
               icon: "none"
             });
-            this.enablePay = true
+            this.enablePay = true;
           }
         },
         fail: err => {
@@ -179,7 +242,53 @@ export default {
             title: "获取服务商失败",
             icon: "none"
           });
-          this.enablePay = true
+          this.enablePay = true;
+        }
+      });
+    },
+    uploadPay() {
+      const _this = this;
+      uni.chooseImage({
+        count: 1,
+        success: e => {
+          const filePath = e.tempFilePaths[0];
+          uni.showLoading();
+          uni.uploadFile({
+            url:
+              "https://freshgo123.com/api/public/api/v1/uploadOrderPaymentImg",
+            name: "file",
+            filePath,
+            formData: {
+              id: _this.pendingBill.orderId
+            },
+            success: res => {
+              if (res.statusCode === 200) {
+                uni.showToast({
+                  title: "上传成功"
+                });
+                _this.updateOrder();
+              } else {
+                uni.showToast({
+                  title: "上传失败",
+                  icon: "none"
+                });
+              }
+            },
+            fail: () => {
+              uni.showToast({
+                title: "上传失败",
+                icon: "none"
+              });
+            }
+          });
+        }
+      });
+    },
+    copy(text) {
+      uni.setClipboardData({
+        data: text,
+        success: function() {
+          uni.showToast({ title: "复制成功" });
         }
       });
     }
@@ -269,6 +378,27 @@ export default {
   .input {
     display: flex;
     align-items: center;
+  }
+}
+.pay-desc {
+  font-size: 26rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  & > div {
+    padding-bottom: 26rpx;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    .copy {
+      color: #fcd81d;
+    }
+  }
+  .button {
+    background: #fcd81d;
+    border-radius: 20rpx;
+    margin: 26rpx 0;
+    font-size: 28rpx;
   }
 }
 .bottom-control {

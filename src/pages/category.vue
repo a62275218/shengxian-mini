@@ -5,7 +5,7 @@
         :class="{'nav-item active': item.active}"
         class="nav-item"
         v-for="(item,index) in category"
-        :key="item"
+        :key="item.id"
         @click="changeActive(index)"
       >{{item.name}}</div>
     </div>
@@ -31,7 +31,8 @@ export default {
     return {
       category: [],
       subcategory: [],
-      subloading: true
+      subloading: true,
+      index: 0
     };
   },
   async onShow() {
@@ -43,10 +44,13 @@ export default {
   methods: {
     goList(id) {
       uni.navigateTo({
-        url: `/pages/productlist?subid=${id}`
+        url: `/pages/productlist?categoryid=${
+          this.category[this.index].id
+        }&subid=${id}`
       });
     },
     changeActive(index) {
+      this.index = index;
       this.getSubCategory(this.category[index].id);
       this.category.forEach((item, idx) => {
         item.active = idx === index;
@@ -75,7 +79,7 @@ export default {
   height: 100vh;
   .navbar {
     width: 200rpx;
-    min-width:200rpx;
+    min-width: 200rpx;
     background: #f7f7f7;
     .nav-item {
       padding: 40rpx;
@@ -94,18 +98,18 @@ export default {
   .sublist {
     display: flex;
     flex-wrap: wrap;
-    padding: 20rpx 0;
+    padding: 20rpx 10rpx;
     .subitem {
-      width: 33%;
+      width: 50%;
       box-sizing: border-box;
       text-align: center;
-      font-size: 26rpx;
+      font-size: 28rpx;
       color: #666666;
       padding-bottom: 40rpx;
       .img {
         padding: 10rpx;
         box-sizing: border-box;
-        height: 140rpx;
+        height: 260rpx;
         margin-bottom: 20rpx;
       }
     }

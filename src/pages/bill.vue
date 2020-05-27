@@ -1,6 +1,7 @@
 <template>
   <div class="bg">
     <tabbar
+      ref="tab"
       :list="list"
       normalColor="#666666"
       activeColor="#FFCB34"
@@ -41,8 +42,9 @@
           <div class="bottom">
             <div class="deliveryImg" @click="preview(bill.deliveryImg)">送货图片</div>
             <div class="control">
-              <div class="cancel btn">取消订单</div>
-              <div class="pay btn" @click="goPayment(bill)">立即支付</div>
+              <div class="cancel btn" @click="cancelOrder(bill)" v-if="currentIndex === 0">取消订单</div>
+              <div class="pay btn" @click="goPayment(bill)" v-if="currentIndex === 0">立即支付</div>
+              <div class="pay btn" @click="confirmBill(bill)" v-if="currentIndex === 1">确认收货</div>
             </div>
           </div>
         </div>
@@ -61,13 +63,13 @@ export default {
     return {
       list: [
         { label: "待付款" },
-        { label: "待配送" },
         { label: "配送中" },
         { label: "已完成" },
         { label: "已退款" }
       ],
       bills: [],
       defaultIndex: 0,
+      currentIndex: 0,
       loading: true
     };
   },
@@ -79,6 +81,7 @@ export default {
     this.defaultIndex = this.list.findIndex((item, index) => {
       return item.label === type;
     });
+    this.$refs.tab.refetch();
   },
   methods: {
     goPayment(bill) {
@@ -87,7 +90,58 @@ export default {
         url: "/pages/pay"
       });
     },
+    cancelOrder(bill) {
+      uni.showModal({
+        title: "提示", //提示的标题,
+        content: "确认要取消该订单吗?", //提示的内容,
+        success: async res => {
+          if (res.confirm) {
+            const res = await this.$request("updateOrder", {
+              loading: true,
+              data: {
+                orderId: bill.orderId,
+                status: "已取消"
+              }
+            });
+            if (res) {
+              uni.showToast({
+                title: "取消订单成功"
+              });
+            }
+            this.$refs.tab.refetch();
+          } else if (res.cancel) {
+            console.log("用户点击取消");
+          }
+        }
+      });
+    },
+    confirmBill(bill) {
+      uni.showModal({
+        title: "提示", //提示的标题,
+        content: "是否要确认收货?", //提示的内容,
+        success: async res => {
+          if (res.confirm) {
+            const res = await this.$request("updateOrder", {
+              loading: true,
+              data: {
+                orderId: bill.orderId,
+                status: "已完成"
+              }
+            });
+            if (res) {
+              uni.showToast({
+                title: "确认收货成功"
+              });
+            }
+            this.$refs.tab.refetch();
+          } else if (res.cancel) {
+            console.log("用户点击取消");
+          }
+        }
+      });
+    },
     async getBillList(index) {
+      this.currentIndex = index;
       this.loading = true;
       const label = this.list[index].label;
       const billRes = await this.$request("fetchOrderByUserIdAndStatus", {

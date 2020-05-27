@@ -28,7 +28,7 @@
     <div class="white-card service-section">
       <div class="section-title">我的服务</div>
       <block v-for="item in menu2" :key="item.title">
-        <div class="row" v-if="userInfo || item.title==='联系客服'" @click="navigateService(item.url)">
+        <div class="row" v-if="userInfo || item.title==='联系客服' || item.title==='关于我们'" @click="navigateService(item.url)">
           <div class="left">
             <image style="width:60rpx;" :src="item.icon" mode="widthFix" />
             {{item.title}}
@@ -52,10 +52,6 @@ export default {
         {
           icon: "/static/daifukuan.png",
           title: "待付款"
-        },
-        {
-          icon: "/static/daipeisong.png",
-          title: "待配送"
         },
         {
           icon: "/static/peisongzhong.png",
@@ -89,6 +85,11 @@ export default {
         {
           icon: "/static/lianxikefu.png",
           title: "联系客服"
+        },
+        {
+          icon: "/static/info.png",
+          title: "关于我们",
+          url: "/pages/about"
         }
       ]
     };

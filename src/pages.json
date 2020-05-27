@@ -78,6 +78,12 @@
       "style": {
         "navigationBarTitleText": "订单填写"
       }
+    },
+    {
+      "path": "pages/about",
+      "style": {
+        "navigationBarTitleText": "关于我们"
+      }
     }
   ],
   "sitemapLocation": "sitemap.json",

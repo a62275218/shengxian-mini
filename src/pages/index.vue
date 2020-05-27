@@ -1,5 +1,6 @@
 <template>
   <div class="bg">
+    <cartbtn />
     <div class="white-card top">
       <div class="search">
         <searchbar placeholder="搜索" @search="goSearchList" />
@@ -51,7 +52,7 @@
           </div>
           <div class="product-list">
             <div class="product-item" v-for="product in item.product" :key="product.id">
-              <productcard :item="product" height="320rpx" />
+              <productcard :item="product" height="380rpx" />
             </div>
           </div>
         </div>
@@ -127,13 +128,13 @@ export default Vue.extend({
       });
     },
     goProduct(payload) {
-      const {param,type} = payload
-      if (type === '商品') {
+      const { param, type } = payload;
+      if (type === "商品") {
         uni.navigateTo({ url: `/pages/product?id=${param}` });
-      }else if (type === '小程序'){
+      } else if (type === "小程序") {
         uni.navigateToMiniProgram({
-          appId:param
-        })
+          appId: param
+        });
       }
     },
     async fetchBanner() {

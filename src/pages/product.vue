@@ -1,5 +1,6 @@
 <template>
   <div class="bg">
+    <cartbtn />
     <div class="swiper">
       <swiper style="height:100%;" indicator-dots autoplay circular @change="swiperChange">
         <block v-for="item in product.imgUrls" :key="item.id">
@@ -23,6 +24,7 @@
           <div :style="{'color':liked?'#FCD81D':'rgba(216, 216, 216, 1)'}">收藏</div>
         </div>
       </div>
+      <div class="desc-text">{{product.detail}}</div>
       <div class="storage">库存: {{product.storageNum || 0}}</div>
       <div class="bottom-info">
         <div class="price">
@@ -32,16 +34,25 @@
         <div class="sell">月销量: {{product.soldNum}}</div>
       </div>
     </div>
+    <div class="gap"></div>
+    <div class="white-card desc-card">
+      <div class="title">产品详情</div>
+      <block v-for="detail in product.description" :key="detail">
+        <div class="gap"></div>
+        <div v-if="detail.type==='文字'">{{detail.context}}</div>
+        <image v-if="detail.type==='图片'" :src="detail.context" mode="widthFix" style="width:100%;" />
+      </block>
+    </div>
+    <div class="large-gap"></div>
     <div class="bottom-control">
       <div class="share" @click="showShare">
         <image src="/static/share.png" style="width:30rpx;margin-right:10rpx" mode="widthFix" />分享
       </div>
       <div class="action">
         <div @click="showCart(product.storageNum)">加入购物车</div>
-        <div @click="showCart(product.storageNum,true)">立即购买</div>
+        <!-- <div @click="showCart(product.storageNum,true)">立即购买</div> -->
       </div>
     </div>
-
     <custommodal :visible="shareCardShow" @close="this.shareCardShow =false">
       <canvas class="canvas" canvas-id="poster"></canvas>
       <button v-if="canvasReady" class="share-btn" @click="saveToPhoto">保存</button>
@@ -116,6 +127,18 @@ export default {
         this.checkProductLike();
       }, 1000);
     }
+    // textDesc() {
+    //   return this.product.description
+    //     ? this.product.description
+    //         .filter(item => item.type === "文字")
+    //         .map(item => item.context)
+    //     : [];
+    // },
+    // imgDesc() {
+    //   return this.product.description
+    //     .filter(item => item.type === "图片")
+    //     .map(item => item.context);
+    // }
   },
   methods: {
     showCart(storageNum, immediate) {
@@ -161,8 +184,10 @@ export default {
               filePath: this.tempFilePath, //图片文件路径，可以是临时文件路径也可以是永久文件路径，不支持网络图片路径,
               success: res => {
                 uni.showToast({
-                  title: "保存分享图成功"
+                  title: "保存分享图成功",
+                  duration:5000
                 });
+                _this.shareCardShow = false
               },
               fail: err => {
                 console.log(err);
@@ -342,9 +367,20 @@ export default {
     line-height: 40rpx;
   }
 }
+.desc-card{
+  padding:20rpx;
+  .title{
+    font-weight:bold;
+    font-size:32rpx;
+  }
+}
 .price-section {
   padding: 30rpx;
   background: #fff;
+  .desc-text {
+    font-size: 26rpx;
+    padding: 10rpx 0;
+  }
   .price {
     display: flex;
     .title {
@@ -427,7 +463,7 @@ export default {
       &:nth-child(1) {
         border-left: 2rpx solid #f6f6f6;
       }
-      &:nth-child(2) {
+      &:nth-child(1) {
         background: #fcd81d;
       }
     }

@@ -13,9 +13,8 @@
 <script lang="ts">
 export default {
   props: ["list", "normalColor", "activeColor", "customStyle", "defaultIndex"],
-  mounted(){
-    console.log('show')
-    this.tabChange(this.defaultIndex || 0)
+  mounted() {
+    //this.tabChange(this.defaultIndex || 0);
   },
   data() {
     return {
@@ -40,6 +39,9 @@ export default {
     tabChange(index) {
       this.activeIndex = index;
       this.$emit("change", index);
+    },
+    refetch() {
+      this.$emit("change", this.activeIndex);
     }
   }
 };

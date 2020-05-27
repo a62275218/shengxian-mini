@@ -30,7 +30,7 @@
       </div>
       <div class="row">
         <div class="input" style="width:90%;">
-          <div class="title">地址</div>
+          <div class="title">收货地址</div>
           <textarea
             placeholder="为了计算运费，请输入后手动选择地址或者直接获取当前地址"
             type="text"
@@ -40,13 +40,13 @@
             @blur="searchGeoLocation"
           />
         </div>
-        <div @click="getLocation">
-          <image src="/static/address.png" mode="widthFix" style="width:36rpx" />
+        <div @click="getLocation" class="getGeo">
+          获取地址
         </div>
       </div>
     </div>
     <div class="gap"></div>
-    <div class="button" @click="changeUser">提交</div>
+    <div class="button" @click="changeUser">确认修改</div>
   </div>
 </template>
 
@@ -63,7 +63,9 @@ export default {
       subName: "",
       veriPass: false,
       veriCode: "",
-      veriMatch: ""
+      veriMatch: "",
+      addValid: true,
+      fetchingAddr: false
     };
   },
   computed: {
@@ -84,7 +86,9 @@ export default {
         this.subName = "";
         return;
       }
+      _this.fetchingAddr = true;
       const geoRes = await this.$request("googleFindAddress", {
+        loading:true,
         data: {
           input: value
         }
@@ -94,6 +98,9 @@ export default {
           title: "获取地理位置失败",
           icon: "none"
         });
+        _this.address = this.userInfo.address;
+        _this.addValid = false;
+        _this.fetchingAddr = false;
         return;
       }
       uni.showActionSheet({
@@ -101,10 +108,11 @@ export default {
         success: function(res) {
           _this.address = geoRes[res.tapIndex].address;
           _this.subName = geoRes[res.tapIndex].subName;
-          this.getLocation = geoRes[res.tapIndex];
+          _this.addValid = true;
+          _this.fetchingAddr = false;
         },
         fail: function(res) {
-          console.log(res.errMsg);
+          _this.fetchingAddr = false;
         }
       });
     },
@@ -115,6 +123,7 @@ export default {
     },
     getLocation() {
       const _this = this;
+      _this.fetchingAddr = true;
       uni.getLocation({
         type: "wgs84",
         success: async function(res) {
@@ -129,9 +138,14 @@ export default {
               title: "获取地理位置失败",
               icon: "none"
             });
+            _this.address = this.userInfo.address;
+            _this.addValid = false;
+            _this.fetchingAddr = false;
           } else {
             _this.address = geoRes.address;
             _this.subName = geoRes.subName;
+            _this.addValid = true;
+            _this.fetchingAddr = false;
           }
         },
         fail: () => {
@@ -139,6 +153,9 @@ export default {
             title: "获取地理位置失败",
             icon: "none"
           });
+          _this.address = this.userInfo.address;
+          _this.addValid = false;
+          _this.fetchingAddr = false;
         }
       });
     },
@@ -162,8 +179,15 @@ export default {
       }
     },
     async changeUser() {
+      if (this.fetchingAddr) {
+        uni.showToast({
+          title: "正在获取地址中,请勿提交",
+          icon: "none"
+        });
+        return;
+      }
       if (this.address) {
-        if (!this.subName) {
+        if (!this.subName || !this.addValid) {
           uni.showToast({
             title: "请选择有效地址",
             icon: "none"
@@ -220,6 +244,11 @@ export default {
     border-radius: 20rpx;
     text-align: center;
     width: 200rpx;
+  }
+  .getGeo{
+    width:140rpx;
+    padding:0 20rpx;
+    color: #1d90fc;
   }
   .veriCode {
     box-sizing: border-box;

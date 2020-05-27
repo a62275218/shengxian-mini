@@ -31,7 +31,7 @@
       </div>
       <div class="row">
         <div class="input" style="width:90%;">
-          <div class="title">地址</div>
+          <div class="title">收货地址</div>
           <textarea
             placeholder="为了计算运费，请输入后手动选择地址或者直接获取当前地址"
             type="text"
@@ -41,17 +41,27 @@
             @blur="searchGeoLocation"
           />
         </div>
-        <div @click="getLocation">
-          <image src="/static/address.png" mode="widthFix" style="width:36rpx" />
-        </div>
+        <div @click="getLocation" class="getGeo">获取地址</div>
       </div>
       <div class="row" @click="openCalendar">
         <div class="input">
           <div class="title">送货时间</div>
+          <image
+            @click.stop="showTip"
+            src="/static/shiptime.png"
+            mode="widthFix"
+            style="width:40rpx;margin-right:10rpx;"
+          />
           <div class="delivery">{{deliveryTime}}</div>
         </div>
         <div>
           <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="input" style="width:90%;">
+          <div class="title">备注</div>
+          <textarea type="text" style="width:90%;" :auto-height="true" v-model="userComment" />
         </div>
       </div>
     </div>
@@ -84,7 +94,7 @@
       <div class="left">
         实付
         <div class="price">${{totalPrice}}</div>
-        <span style="font-size:24rpx;">{{!isNaN(shipPrice)?`(包含运费:$${shipPrice})`:`请选择地址计算运费`}}</span>
+        <span style="font-size:24rpx;">{{shipText}}</span>
       </div>
       <div class="confirm" @click="confirmPay" v-if="!share">立即支付</div>
     </div>
@@ -106,6 +116,7 @@ export default {
       deliveryTime: "",
       ruleText: "",
       subName: "",
+      userComment: "",
       shipPrice: null,
       veriPass: false,
       geoLocation: undefined,
@@ -130,41 +141,26 @@ export default {
       this.address = this.userInfo.address;
       this.subName = this.userInfo.subName;
       this.veriPass = Boolean(this.userInfo.phone);
-      console.log(this.userInfo);
+      console.log(this.userInfo)
+      this.fetchShipFeeBySub(this.userInfo.subName);
     }
     const rule = await this.$request("fetchRuleText", {});
     if (rule) {
       this.ruleText = rule.ruleText;
     }
   },
-  watch: {
-    subName: {
-      async handler(val) {
-        console.log(val);
-        if (val) {
-          const shipRes = await this.$request("fetchFeeBySubName", {
-            data: {
-              subName: val,
-              productPrice: this.totalP
-            }
-          });
-          if (shipRes) {
-            this.shipPrice = Number(shipRes);
-          } else {
-            uni.showToast({
-              title: "运费计算失败,请联系客服",
-              icon: "none"
-            });
-          }
-        }
-      },
-      immediate: true
-    }
-  },
   computed: {
     ...mapState(["cart", "userInfo"]),
     productsToBuy() {
       return this.cart.filter(item => item.active);
+    },
+    shipText() {
+      if (this.subName && typeof this.shipPrice !== "number") {
+        return "该地区运费需人工确认";
+      }
+      return typeof this.shipPrice == "number"
+        ? `(包含运费:$${this.shipPrice})`
+        : `请选择地址计算运费`;
     },
     totalP() {
       let total = 0;
@@ -192,8 +188,34 @@ export default {
     openCalendar() {
       this.$refs.calendar.open();
     },
+    async fetchShipFeeBySub(val) {
+      if (val) {
+        const shipRes = await this.$request("fetchFeeBySubName", {
+          loading: true,
+          data: {
+            subName: val,
+            productPrice: this.totalP
+          }
+        });
+        if (shipRes) {
+          this.shipPrice = Number(shipRes);
+        } else {
+          uni.showToast({
+            title: "该地区运费需人工确认，请联系客服完成下单",
+            icon: "none"
+          });
+          this.shipPrice = null;
+        }
+      }
+    },
+    showTip() {
+      uni.showModal({
+        content: "每天七点前订单 隔日可派送 周天和大型节假日不送货"
+      });
+    },
     async confirmDate(e) {
       const result = await this.$request("checkDeliveryDateMakeOrder", {
+        loading: true,
         data: {
           deliveryDate: e.fulldate
         }
@@ -202,7 +224,7 @@ export default {
         this.deliveryTime = e.fulldate;
       } else {
         uni.showToast({
-          title: "该时间不在可配送时间段,请重新选择",
+          title: "该日期无法配送,7pm前下单可隔日送货,周日和特定节假日不送货",
           icon: "none"
         });
       }
@@ -230,6 +252,7 @@ export default {
         return;
       }
       const geoRes = await this.$request("googleFindAddress", {
+        loading: true,
         data: {
           input: value
         }
@@ -246,7 +269,7 @@ export default {
         success: function(res) {
           _this.address = geoRes[res.tapIndex].address;
           _this.subName = geoRes[res.tapIndex].subName;
-          _this.getLocation = geoRes[res.tapIndex];
+          _this.fetchShipFeeBySub(geoRes[res.tapIndex].subName);
         },
         fail: function(res) {
           console.log(res.errMsg);
@@ -272,6 +295,7 @@ export default {
           } else {
             _this.address = geoRes.address;
             _this.subName = geoRes.subName;
+            _this.fetchShipFeeBySub(geoRes.subName);
           }
         },
         fail: () => {
@@ -338,8 +362,8 @@ export default {
       if (!this.subName) {
         errorMsg = "请选取有效地址";
       }
-      if (isNaN(this.shipPrice)) {
-        errorMsg = "如无法计算运费请联系客服";
+      if (typeof this.shipPrice !== "number") {
+        errorMsg = "该地区运费需人工确认，请联系客服完成下单";
       }
       if (errorMsg) {
         uni.showToast({
@@ -359,6 +383,7 @@ export default {
           address: this.address,
           subName: this.subName,
           price: this.totalPrice,
+          userComment: this.userComment,
           deliveryDate: this.deliveryTime,
           orderDetail: this.productsToBuy.map(item => {
             return {
@@ -379,7 +404,7 @@ export default {
           );
         }
         this.$store.commit("changePendingBill", bill);
-        uni.navigateTo({
+        uni.reLaunch({
           url: "/pages/pay"
         });
       }
@@ -476,6 +501,11 @@ export default {
       align-items: center;
       justify-content: center;
     }
+  }
+  .getGeo {
+    color: #1d90fc;
+    width: 140rpx;
+    padding: 0 20rpx;
   }
 }
 </style>

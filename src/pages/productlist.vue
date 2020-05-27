@@ -1,10 +1,33 @@
 <template>
   <div class="bg">
+    <cartbtn />
     <div class="header">
       <div class="search">
-        <searchbar placeholder="商品名称" background="#F4F4F4" @search="changeSearch" :value="searchWord"/>
+        <div class="cate-text">
+          <span style="margin-right:10rpx;">{{currentCategory.name}}</span>
+          {{subCategoryList.length?currentSubCategory.name:''}}
+        </div>
+        <div style="flex:1;">
+          <searchbar
+            placeholder="商品名称"
+            background="#F4F4F4"
+            @search="changeSearch"
+            :value="searchWord"
+          />
+        </div>
       </div>
       <div class="filter">
+        <picker
+          class="item"
+          mode="multiSelector"
+          :value="multiIndex"
+          :range="[categoryList,subCategoryList]"
+          range-key="name"
+          @change="handleCateChange"
+          @columnchange="handleColChange"
+        >
+          <div>分类</div>
+        </picker>
         <div class="item" v-for="item in filterTab" :key="item.name" @click="changeStatus(item)">
           {{item.name}}
           <image style="width:34rpx;" :src="judgeSortImg(item.status)" mode="widthFix" />
@@ -15,7 +38,6 @@
           class="product-item"
           v-for="item in filterProductList"
           :key="item.id"
-          @click="goDetail(item.id)"
         >
           <productcard :item="item" />
         </div>
@@ -31,38 +53,78 @@ export default {
   data() {
     return {
       filterTab: [
-        { name: "销量", status: "" },
-        { name: "最新", status: "descend" },
+        { name: "销量", status: "descend" },
+        { name: "最新", status: "" },
         { name: "价格", status: "" }
       ],
-      subCategoryId: "",
-      categoryId: "",
       searchWord: "",
-      tagId: ""
+      tagId: "",
+      multiIndex: [0, 0],
+      categoryList: [],
+      subCategoryList: []
     };
   },
   computed: {
-    ...mapState(["filterProductList"])
+    ...mapState(["filterProductList"]),
+    currentCategory() {
+      return this.categoryList[this.multiIndex[0]];
+    },
+    currentSubCategory() {
+      return this.subCategoryList[this.multiIndex[1]];
+    },
+    categoryId() {
+      return this.categoryList[this.multiIndex[0]]
+        ? this.categoryList[this.multiIndex[0]].id
+        : undefined;
+    },
+    subCategoryId() {
+      return this.subCategoryList[this.multiIndex[1]]
+        ? this.subCategoryList[this.multiIndex[1]].id
+        : undefined;
+    }
   },
-  onShow() {
+  async onShow() {
+    const category = await this.$request("fetchCategories", {});
+    this.categoryList = category;
     const { subid, categoryid, tagid, keyword } = this.$mp.query;
     if (subid) {
-      this.subCategoryId = subid;
+      const subcategory = await this.$request(
+        "fetchSubCategoriesByCategoriesId",
+        {
+          data: {
+            id: categoryid
+          }
+        }
+      );
+      this.subCategoryList = subcategory;
+      this.multiIndex[1] = subcategory.findIndex(item => item.id == subid);
+    } else {
+      this.subCategoryList = [];
     }
     if (categoryid) {
-      this.categoryId = categoryid;
+      this.multiIndex[0] = category.findIndex(item => item.id == categoryid);
     }
     if (tagid) {
       this.tagId = tagid;
     }
-    if(keyword){
-      this.searchWord = keyword
+    if (keyword) {
+      this.searchWord = keyword;
     }
     this.filterProducts();
   },
   methods: {
     goDetail(id) {
       uni.navigateTo({ url: `/pages/product?id=${id}` });
+    },
+    async handleColChange(e) {
+      if (e.detail.column === 0) {
+        const cateid = await this.categoryList[e.detail.value].id;
+        this.getSubCategory(cateid);
+      }
+    },
+    handleCateChange(e) {
+      this.multiIndex = e.detail.value;
+      this.filterProducts();
     },
     judgeSortImg(status) {
       if (status) {
@@ -74,6 +136,17 @@ export default {
       } else {
         return "/static/sort.png";
       }
+    },
+    async getSubCategory(id) {
+      const subcategory = await this.$request(
+        "fetchSubCategoriesByCategoriesId",
+        {
+          data: {
+            id
+          }
+        }
+      );
+      this.subCategoryList = subcategory;
     },
     changeSearch(searchWord) {
       this.searchWord = searchWord;
@@ -90,7 +163,6 @@ export default {
       this.filterProducts();
     },
     async filterProducts() {
-      console.log(this.tagId);
       const current = this.filterTab.find(item => {
         return item.status !== "";
       });
@@ -127,6 +199,12 @@ export default {
   .search {
     padding: 20rpx;
     border-bottom: 2rpx solid #f3f3f3;
+    display: flex;
+    align-items: center;
+    .cate-text {
+      font-size: 24rpx;
+      margin-right: 10rpx;
+    }
   }
   .filter {
     display: flex;

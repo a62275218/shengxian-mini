@@ -9,6 +9,7 @@ import productcard from "@/components/productcard.vue";
 import tabbar from "@/components/tabbar.vue";
 import custommodal from "@/components/custommodal.vue";
 import numberbox from "@/components/numberbox.vue";
+import cartbtn from "@/components/cartbtn.vue";
 import uniCalendar from "@/components/uni-calendar/uni-calendar.vue";
 
 Vue.config.productionTip = false;
@@ -25,5 +26,6 @@ Vue.component("tabbar", tabbar);
 Vue.component("custommodal", custommodal);
 Vue.component("numberbox", numberbox);
 Vue.component("uniCalendar", uniCalendar);
+Vue.component("cartbtn",cartbtn)
 
 new App().$mount();

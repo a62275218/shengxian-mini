@@ -15,7 +15,9 @@ const store = new Vuex.Store({
     filterProductList: [],
     cart: [],
     historyList: [],
+    serviceList: [],
     pendingBill: false,
+    categoryList: [],
   },
   actions: {
     fetchProductList: async ({ state, commit }, payload) => {
@@ -38,6 +40,15 @@ const store = new Vuex.Store({
       const productList = getIn(totalProductRes, "data");
       if (productList) {
         state.productList = productList;
+      }
+    },
+    fetchServiceList: async ({ state }) => {
+      const list = await request("fetchSupport", {
+        data: {},
+      });
+      const serviceList = getIn(list);
+      if (list) {
+        state.serviceList = serviceList;
       }
     },
     userLogin: async ({ state, commit }, payload) => {
@@ -128,7 +139,7 @@ const store = new Vuex.Store({
       }
     },
     addCart: (state, payload) => {
-      const { product, num,immediateToBuy } = payload;
+      const { product, num, toast = true } = payload;
       const existCart = state.cart.find((item) => {
         return item.product.id === product.id;
       });
@@ -137,9 +148,34 @@ const store = new Vuex.Store({
       } else {
         existCart.num += num;
       }
-      uni.showToast({
-        title: "添加成功",
+      if (toast) {
+        uni.showToast({
+          title: "添加成功",
+        });
+      }
+      uni.setStorageSync("cart", state.cart);
+    },
+    minusCart: (state, payload) => {
+      const { product, num } = payload;
+      const existCart = state.cart.find((item) => {
+        return item.product.id === product.id;
       });
+      if (!existCart) {
+        return;
+      } else {
+        existCart.num -= num;
+        if ((existCart.num) < 1) {
+          let index: number;
+          state.cart.forEach((item, idx) => {
+            if (item.product.id === product.id) {
+              index = idx;
+            }
+          });
+          if (index) {
+            state.cart.splice(index, 1);
+          }
+        }
+      }
       uni.setStorageSync("cart", state.cart);
     },
     changePendingBill: (state, payload) => {
@@ -183,12 +219,12 @@ const store = new Vuex.Store({
     },
     batchRemoveFromCart: (state, idList) => {
       const newCart = state.cart.filter((item) => {
-        const exist = idList.find(id=>{
-          return Number(id) == Number(item.product.id)
-        })
+        const exist = idList.find((id) => {
+          return Number(id) == Number(item.product.id);
+        });
         return !exist;
       });
-      state.cart = newCart
+      state.cart = newCart;
       uni.setStorageSync("cart", newCart);
     },
     updateUser: (state, newUser) => {

@@ -125,7 +125,7 @@ export default {
       }
     },
     handleDel() {
-      const _this = this
+      const _this = this;
       uni.showModal({
         title: "提示", //提示的标题,
         content: "确认要删除选中产品吗?", //提示的内容,
@@ -152,10 +152,11 @@ export default {
       });
     },
     toggleSelectAll() {
-      this.selectAll = !this.selectAll;
+      const slAll = !this.selectAll;
+      this.selectAll = slAll;
       this.$store.commit("changeCart", {
         index: "all",
-        active: !this.selectAll
+        active: slAll
       });
     }
   }
@@ -221,6 +222,7 @@ export default {
   bottom: 0;
   width: 100%;
   justify-content: space-between;
+  z-index:101;
   .select-all {
     display: flex;
     align-items: center;

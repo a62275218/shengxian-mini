@@ -9,7 +9,7 @@
           @click="goDetail(product.id)"
         >
           <div class="left">
-            <image :src="product.imgUrls[0]" mode="widthFix" style="width:200rpx" />
+            <image :src="product.imgUrls[0]" mode="widthFix"  style="min-width:180rpx;width:180rpx" />
             <div class="title">{{product.title}}</div>
           </div>
           <div>
