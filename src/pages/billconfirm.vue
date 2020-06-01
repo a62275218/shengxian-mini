@@ -20,7 +20,11 @@
             v-model="veriCode"
             @input="verifyCode"
           />
-          <div class="get" @click="getVeriCode" v-if="!share && !userInfo.phone">获取验证码</div>
+          <div
+            class="get"
+            @click="getVeriCode"
+            v-if="(!share && !userInfo.phone) || (userInfo && phone !== userInfo.phone)"
+          >获取验证码</div>
         </div>
       </div>
       <div class="row">
@@ -141,7 +145,6 @@ export default {
       this.address = this.userInfo.address;
       this.subName = this.userInfo.subName;
       this.veriPass = Boolean(this.userInfo.phone);
-      console.log(this.userInfo)
       this.fetchShipFeeBySub(this.userInfo.subName);
     }
     const rule = await this.$request("fetchRuleText", {});
@@ -182,6 +185,13 @@ export default {
         total += Number(this.shipPrice);
       }
       return total;
+    }
+  },
+  watch: {
+    phone(val) {
+      if (this.userInfo) {
+        this.veriPass = val === this.userInfo.phone;
+      }
     }
   },
   methods: {

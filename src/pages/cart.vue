@@ -17,7 +17,9 @@
             <div>{{item.product.title}}</div>
             <div class="control">
               <div class="price">${{item.product.price}}</div>
-              <numberbox :min="1" :initialVal="item.num" :index="index" @change="changeNum" />
+              <div style="width:200rpx">
+                <numberbox :min="1" :initialVal="item.num" :index="index" @change="changeNum" />
+              </div>
             </div>
           </div>
         </div>
@@ -222,7 +224,7 @@ export default {
   bottom: 0;
   width: 100%;
   justify-content: space-between;
-  z-index:101;
+  z-index: 101;
   .select-all {
     display: flex;
     align-items: center;

@@ -52,7 +52,7 @@
           </div>
           <div class="product-list">
             <div class="product-item" v-for="product in item.product" :key="product.id">
-              <productcard :item="product" height="380rpx" />
+              <productcard :item="product" height="380rpx" :breakLine="true"/>
             </div>
           </div>
         </div>

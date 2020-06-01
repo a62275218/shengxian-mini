@@ -30,6 +30,7 @@
         <div class="price">
           <span class="dollar">$</span>
           <span>{{product.price}}</span>
+          <span class="unit">/{{product.unit}}</span>
         </div>
         <div class="sell">月销量: {{product.soldNum}}</div>
       </div>
@@ -45,11 +46,20 @@
     </div>
     <div class="large-gap"></div>
     <div class="bottom-control">
-      <div class="share" @click="showShare">
-        <image src="/static/share.png" style="width:30rpx;margin-right:10rpx" mode="widthFix" />分享
+      <div class="flex-left">
+        <div class="home" @click="backHome">
+          <image src="/static/shouye-active.png" mode="widthFix" style="width:100%;" />
+          <div style="margin-top:-10rpx">主页</div>
+        </div>
+        <div class="share" @click="showShare">
+          <image src="/static/share.png" style="width:30rpx;margin-right:10rpx" mode="widthFix" />分享
+        </div>
       </div>
-      <div class="action">
-        <div @click="showCart(product.storageNum)">加入购物车</div>
+      <div class="white-card cartmodal" v-if="product.storageNum > 0">
+        <numberbox :min="0" :max="product.storageNum" @change="handleCartNumChange" :initialVal="1"></numberbox>
+      </div>
+      <div class="action" v-if="product.storageNum > 0">
+        <div @click="addToCart">加入购物车</div>
         <!-- <div @click="showCart(product.storageNum,true)">立即购买</div> -->
       </div>
     </div>
@@ -58,7 +68,7 @@
       <button v-if="canvasReady" class="share-btn" @click="saveToPhoto">保存</button>
       <!-- <canvas class="canvas" canvas-id="poster"></canvas> -->
     </custommodal>
-    <custommodal position="bottom" :visible="showAddCart" @close="handleCartClose">
+    <!-- <custommodal position="bottom" :visible="showAddCart" @close="handleCartClose">
       <div class="white-card cartmodal">
         <div class="control">
           <div>数量</div>
@@ -71,7 +81,7 @@
         </div>
         <div class="confirm" @click="addToCart">确认</div>
       </div>
-    </custommodal>
+    </custommodal>-->
   </div>
 </template>
 
@@ -152,6 +162,11 @@ export default {
       }
       this.showAddCart = true;
     },
+    backHome() {
+      uni.switchTab({
+        url: "/pages/index"
+      });
+    },
     addToCart() {
       if (!this.numToAdd) {
         return;
@@ -185,9 +200,9 @@ export default {
               success: res => {
                 uni.showToast({
                   title: "保存分享图成功",
-                  duration:5000
+                  duration: 5000
                 });
-                _this.shareCardShow = false
+                _this.shareCardShow = false;
               },
               fail: err => {
                 console.log(err);
@@ -367,11 +382,11 @@ export default {
     line-height: 40rpx;
   }
 }
-.desc-card{
-  padding:20rpx;
-  .title{
-    font-weight:bold;
-    font-size:32rpx;
+.desc-card {
+  padding: 20rpx;
+  .title {
+    font-weight: bold;
+    font-size: 32rpx;
   }
 }
 .price-section {
@@ -389,6 +404,11 @@ export default {
       flex: 1;
       padding-right: 30rpx;
       box-sizing: border-box;
+    }
+    .unit {
+      margin-left: 10rpx;
+      color: #bfbfbf;
+      font-size: 24rpx;
     }
     .favorite {
       width: 40rpx;
@@ -440,6 +460,17 @@ export default {
   font-size: 28rpx;
   height: 130rpx;
   align-items: center;
+  .flex-left{
+    display:flex;
+    align-items: center;
+  }
+  .home {
+    width: 60rpx;
+    color: rgba(252, 216, 29, 1);
+    font-size: 20rpx;
+    text-align: center;
+    margin-right:20rpx;
+  }
   .share {
     box-sizing: border-box;
     height: 50rpx;
@@ -470,11 +501,13 @@ export default {
   }
 }
 .cartmodal {
+  width: 190rpx;
   .control {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 40rpx;
+    width: 180rpx;
   }
   .confirm {
     background: rgba(252, 216, 29, 1);

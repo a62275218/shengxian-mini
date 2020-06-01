@@ -7,6 +7,7 @@
         <div class="font">{{judgeTagContent()}}</div>
       </div>
       <div class="img" :style="{height:imgHeight}" @click="goDetail(item.id)">
+        <div class="mask" v-if="Number(item.storageNum) <1"></div>
         <imagep :src="item.imgUrls[0]" />
       </div>
       <div class="title">{{item.title}}</div>
@@ -16,8 +17,13 @@
           <span>{{item.price}}</span>
           <span>/{{item.unit}}</span>
         </div>
+        <div class="num" v-if="!breakLine">
+          <div class="btn" v-if="num>0" @click="removeCart">-</div>
+          <div class="number" v-if="num>0">{{num}}</div>
+          <div class="btn" @click="addCart" v-if="Number(item.storageNum)>0">+</div>
+        </div>
       </div>
-      <div class="num">
+      <div class="num" v-if="breakLine">
         <div class="btn" v-if="num>0" @click="removeCart">-</div>
         <div class="number" v-if="num>0">{{num}}</div>
         <div class="btn" @click="addCart" v-if="Number(item.storageNum)>0">+</div>
@@ -29,7 +35,7 @@
 <script>
 import { mapState } from "vuex";
 export default {
-  props: ["item", "height"],
+  props: ["item", "height", "breakLine"],
   computed: {
     ...mapState(["cart"]),
     num() {
@@ -139,9 +145,19 @@ export default {
 
     .img {
       overflow: hidden;
+      position:relative;
       height: calc(100% - 90px);
       width: 100%;
       margin-bottom: 20rpx;
+      .mask{
+        position:absolute;  
+        width:100%;
+        height:100%;
+        top:0;
+        left:0;
+        background:rgba(1,1,1,0.4);
+        z-index:97;
+      }
       image {
         height: 200rpx;
       }
@@ -167,7 +183,7 @@ export default {
   }
 }
 .num {
-  width:100%;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: flex-end;

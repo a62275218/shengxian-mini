@@ -64,8 +64,8 @@ export default {
 
 <style lang="scss">
 .box {
-  width: 200rpx;
-  height: 60rpx;
+  width: 100%;
+  height: 100%;
   display: flex;
   .center {
     flex: 1;
@@ -75,8 +75,10 @@ export default {
     height: 100%;
   }
   .side {
-    padding: 0 20rpx;
-    line-height: 55rpx;
+    width: 60rpx;
+    height: 60rpx;
+    line-height: 60rpx;
+    text-align:center;
     border: 2rpx solid #c5c5c5;
     color: #c5c5c5;
     border-radius: 10rpx;

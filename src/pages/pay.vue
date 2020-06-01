@@ -99,9 +99,13 @@
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>
-        <block v-else-if="payMode ==='人民币支付'">
+        <block v-else-if="payMode ==='RMB支付'">
           <div>人民币支付 实时汇率 零手续费</div>
-          <div>扫描一下二维码支付</div>
+          <div>扫描以下二维码支付</div>
+          <div>请务必截图，以便上传支付凭证</div>
+          <div class="paycode">
+            <image src="/static/paycode.jpg" mode="widthFix" style="width:100%;" />
+          </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>
         <block v-else-if="payMode ==='货到付款'">
@@ -166,19 +170,34 @@ export default {
       });
     },
     async confirmProductArrival() {
-      const res = await this.$request("updateOrder", {
-        loading: true,
-        data: {
-          orderId: this.pendingBill.orderId,
-          paymentWay: this.payMode,
-          status: "配送中"
+      uni.showModal({
+        title: "提示", //提示的标题,
+        content: "是否要确认下单?", //提示的内容,
+        success: async res => {
+          if (res.confirm) {
+            const res = await this.$request("updateOrder", {
+              loading: true,
+              data: {
+                orderId: this.pendingBill.orderId,
+                paymentWay: this.payMode,
+                status: "配送中"
+              }
+            });
+            if (res) {
+              uni.showToast({
+                title: "确认成功"
+              });
+              setTimeout(() => {
+                uni.switchTab({
+                  url: "/pages/my"
+                });
+              }, 1000);
+            }
+          } else if (res.cancel) {
+            console.log("用户点击取消");
+          }
         }
       });
-      if (res) {
-        uni.showToast({
-          title: "确认成功"
-        });
-      }
     },
     payBill() {
       if (!this.enablePay) {
@@ -267,6 +286,11 @@ export default {
                   title: "上传成功"
                 });
                 _this.updateOrder();
+                setTimeout(() => {
+                  uni.switchTab({
+                    url: "/pages/my"
+                  });
+                }, 1000);
               } else {
                 uni.showToast({
                   title: "上传失败",
@@ -378,6 +402,13 @@ export default {
   .input {
     display: flex;
     align-items: center;
+  }
+}
+.paycode {
+  overflow: hidden;
+  border-radius: 124rpx;
+  image {
+    margin-bottom: -40rpx;
   }
 }
 .pay-desc {

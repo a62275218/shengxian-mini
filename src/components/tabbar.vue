@@ -14,7 +14,7 @@
 export default {
   props: ["list", "normalColor", "activeColor", "customStyle", "defaultIndex"],
   mounted() {
-    //this.tabChange(this.defaultIndex || 0);
+    this.tabChange(this.defaultIndex || 0);
   },
   data() {
     return {

@@ -81,6 +81,7 @@ export default {
     this.defaultIndex = this.list.findIndex((item, index) => {
       return item.label === type;
     });
+    console.log(this.defaultIndex)
     this.$refs.tab.refetch();
   },
   methods: {

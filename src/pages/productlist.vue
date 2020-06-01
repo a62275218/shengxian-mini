@@ -34,11 +34,7 @@
         </div>
       </div>
       <div class="products">
-        <div
-          class="product-item"
-          v-for="item in filterProductList"
-          :key="item.id"
-        >
+        <div class="product-item" v-for="item in filterProductList" :key="item.id">
           <productcard :item="item" />
         </div>
       </div>
