@@ -26,6 +26,7 @@
       </div>
       <div class="gap"></div>
     </block>
+    <div class="page-gap"></div>
     <div class="bottom-control white-card" v-if="cart.length">
       <div class="select-all">
         <div @click="toggleSelectAll" :class="[{'active button':selectAll},{'button':!selectAll}]"></div>
@@ -58,7 +59,7 @@ export default {
           total += item.product.price * item.num;
         }
       });
-      return total;
+      return total.toFixed(2);
     },
     totalLength() {
       let total = 0;
@@ -150,7 +151,7 @@ export default {
     changeNum(num, index) {
       this.$store.commit("changeCart", {
         index,
-        num
+        num:Number(num)
       });
     },
     toggleSelectAll() {

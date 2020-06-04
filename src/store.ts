@@ -73,7 +73,7 @@ const store = new Vuex.Store({
             const openid = getIn(opendID, "openid");
             if (openid) {
               const userInfo: any = await request("registerUser", {
-                data: { username: nickName, openId: openid },
+                data: { username: nickName, openId: openid,imgUrl:avatarUrl },
                 errorMsg: "登录失败",
                 loading: true,
               });
@@ -171,7 +171,7 @@ const store = new Vuex.Store({
               index = idx;
             }
           });
-          if (index) {
+          if (typeof(index) !== 'undefined') {
             state.cart.splice(index, 1);
           }
         }

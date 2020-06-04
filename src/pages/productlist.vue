@@ -35,7 +35,7 @@
       </div>
       <div class="products">
         <div class="product-item" v-for="item in filterProductList" :key="item.id">
-          <productcard :item="item" />
+          <productcard imgHeight="300rpx" :item="item" />
         </div>
       </div>
     </div>

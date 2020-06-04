@@ -41,6 +41,7 @@
           </div>
           <div class="bottom">
             <div class="deliveryImg" @click="preview(bill.deliveryImg)">送货图片</div>
+            <div v-if="bill.paymentImg" class="deliveryImg" @click="preview(bill.paymentImg)">查看凭证</div>
             <div class="control">
               <div class="cancel btn" @click="cancelOrder(bill)" v-if="currentIndex === 0">取消订单</div>
               <div class="pay btn" @click="goPayment(bill)" v-if="currentIndex === 0">立即支付</div>
@@ -207,6 +208,7 @@ export default {
   }
   .row {
     display: flex;
+    align-items:center;
     &:not(:last-child) {
       margin-bottom: 20rpx;
     }

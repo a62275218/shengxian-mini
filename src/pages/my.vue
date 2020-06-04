@@ -10,7 +10,7 @@
         <div class="text">{{userInfo.username}}</div>
       </block>
       <block v-else>
-        <image src="/static/头像.png" style="width:120rpx;" mode="widthFix" />
+        <image src="/static/头像.png" style="width:120rpx;z-index:200" mode="widthFix" />
         <button class="text normal-button" open-type="getUserInfo" @getuserinfo="login">立即登录</button>
         <image src="/static/youjiantou.png" style="width:40rpx;margin-top:6rpx" mode="widthFix" />
       </block>

@@ -52,7 +52,7 @@
           </div>
           <div class="product-list">
             <div class="product-item" v-for="product in item.product" :key="product.id">
-              <productcard :item="product" height="380rpx" :breakLine="true"/>
+              <productcard imgHeight="200rpx" :item="product" :breakLine="true"/>
             </div>
           </div>
         </div>
@@ -99,6 +99,11 @@ export default Vue.extend({
   components: {
     customModal,
     tabBar
+  },
+  onShareAppMessage(){
+    return {
+      path:'/pages/index'
+    }
   },
   methods: {
     handleLoad(item) {
@@ -222,7 +227,7 @@ export default Vue.extend({
       display: flex;
       font-size: 24rpx;
       align-items: center;
-      animation: horizontal 15s linear infinite;
+      animation: horizontal 30s linear infinite;
       & div {
         padding-right: 80rpx;
         &:nth-last-child(1) {

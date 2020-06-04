@@ -35,7 +35,7 @@
 <script>
 import { mapState } from "vuex";
 export default {
-  props: ["item", "height", "breakLine"],
+  props: ["item", "height", "breakLine", "imgHeight"],
   computed: {
     ...mapState(["cart"]),
     num() {
@@ -105,7 +105,7 @@ export default {
       color: #fff;
       font-size: 22rpx;
       background: #ff8c40;
-      padding: 6rpx 12rpx;
+      padding: 8rpx 18rpx;
       border-bottom-right-radius: 10rpx;
     }
     .tag {
@@ -145,18 +145,17 @@ export default {
 
     .img {
       overflow: hidden;
-      position:relative;
-      height: calc(100% - 90px);
+      position: relative;
       width: 100%;
       margin-bottom: 20rpx;
-      .mask{
-        position:absolute;  
-        width:100%;
-        height:100%;
-        top:0;
-        left:0;
-        background:rgba(1,1,1,0.4);
-        z-index:97;
+      .mask {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background: rgba(1, 1, 1, 0.4);
+        z-index: 97;
       }
       image {
         height: 200rpx;

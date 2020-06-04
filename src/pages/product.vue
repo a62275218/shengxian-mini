@@ -1,6 +1,5 @@
 <template>
   <div class="bg">
-    <cartbtn />
     <div class="swiper">
       <swiper style="height:100%;" indicator-dots autoplay circular @change="swiperChange">
         <block v-for="item in product.imgUrls" :key="item.id">
@@ -48,19 +47,25 @@
     <div class="bottom-control">
       <div class="flex-left">
         <div class="home" @click="backHome">
-          <image src="/static/shouye-active.png" mode="widthFix" style="width:100%;" />
+          <image src="/static/shouye-active.png" mode="widthFix" />
           <div style="margin-top:-10rpx">主页</div>
         </div>
-        <div class="share" @click="showShare">
-          <image src="/static/share.png" style="width:30rpx;margin-right:10rpx" mode="widthFix" />分享
+        <div class="home" @click="showShare">
+          <image src="/static/fenxiang.png" mode="widthFix" />
+          <div style="margin-top:-10rpx">分享</div>
+        </div>
+        <div class="home" @click="goCart">
+          <image src="/static/gouwuche-active.png" mode="widthFix" />
+          <div class="number" v-if="cart.length">{{cart.length}}</div>
+          <div style="margin-top:-10rpx">购物车</div>
         </div>
       </div>
       <div class="white-card cartmodal" v-if="product.storageNum > 0">
-        <numberbox :min="0" :max="product.storageNum" @change="handleCartNumChange" :initialVal="1"></numberbox>
-      </div>
-      <div class="action" v-if="product.storageNum > 0">
-        <div @click="addToCart">加入购物车</div>
-        <!-- <div @click="showCart(product.storageNum,true)">立即购买</div> -->
+        <div class="box">
+          <div class="side" @click="removeCart">-</div>
+          <div class="center">{{num}}</div>
+          <div class="side" @click="addCart">+</div>
+        </div>
       </div>
     </div>
     <custommodal :visible="shareCardShow" @close="this.shareCardShow =false">
@@ -124,7 +129,20 @@ export default {
     this.checkProductLike();
   },
   computed: {
-    ...mapState(["productList", "userInfo"]),
+    ...mapState(["productList", "userInfo", "cart"]),
+    num() {
+      if (!this.product || !this.cart) {
+        return 0;
+      }
+      const cartItem = this.cart.find(item => {
+        return item.product.id == this.product.id;
+      });
+      if (!cartItem) {
+        return 0;
+      } else {
+        return cartItem.num;
+      }
+    },
     handleFavorite() {
       return this.$throttle(async () => {
         this.liked = !this.liked;
@@ -151,6 +169,33 @@ export default {
     // }
   },
   methods: {
+    removeCart() {
+      if (this.num > 0) {
+        this.$store.commit("minusCart", {
+          product: this.product,
+          num: 1
+        });
+      }
+    },
+    addCart() {
+      if (this.num < this.product.storageNum) {
+        this.$store.commit("addCart", {
+          product: this.product,
+          num: 1,
+          toast: false
+        });
+      } else {
+        uni.showToast({
+          title: "没有库存啦",
+          icon: "none"
+        });
+      }
+    },
+    goCart() {
+      uni.switchTab({
+        url: "/pages/cart"
+      });
+    },
     showCart(storageNum, immediate) {
       this.immediateToBuy = Boolean(immediate);
       if (Number(storageNum) < 1) {
@@ -451,7 +496,7 @@ export default {
 .bottom-control {
   position: fixed;
   width: 100%;
-  padding: 0 20rpx;
+  padding: 16rpx 40rpx;
   bottom: 0;
   left: 0;
   background: #fff;
@@ -460,16 +505,35 @@ export default {
   font-size: 28rpx;
   height: 130rpx;
   align-items: center;
-  .flex-left{
-    display:flex;
+  box-sizing: border-box;
+  .flex-left {
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
   }
   .home {
-    width: 60rpx;
+    width: 74rpx;
     color: rgba(252, 216, 29, 1);
-    font-size: 20rpx;
+    font-size: 24rpx;
     text-align: center;
-    margin-right:20rpx;
+    margin-right: 20rpx;
+    position:relative;
+    .number {
+      position: absolute;
+      width: 26rpx;
+      height: 26rpx;
+      bottom: 30rpx;
+      right: 0;
+      border-radius: 50%;
+      background: red;
+      color: #fff;
+      text-align: center;
+      font-size: 20rpx;
+    }
+    image {
+      width: 70%;
+    }
   }
   .share {
     box-sizing: border-box;
@@ -480,7 +544,7 @@ export default {
     display: flex;
     align-items: center;
     border-radius: 25rpx;
-    margin: 24rpx 0;
+    margin: 24rpx 10rpx;
   }
   .action {
     display: table;
@@ -526,5 +590,28 @@ export default {
   margin-top: 20rpx;
   width: 80%;
   background: #fcd81d;
+}
+
+.box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  .center {
+    flex: 1;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 10rpx 0;
+    height: 100%;
+  }
+  .side {
+    width: 60rpx;
+    height: 60rpx;
+    line-height: 60rpx;
+    text-align: center;
+    border: 2rpx solid #c5c5c5;
+    color: #c5c5c5;
+    border-radius: 10rpx;
+    font-size: 30rpx;
+  }
 }
 </style>

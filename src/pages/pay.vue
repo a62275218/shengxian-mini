@@ -103,7 +103,7 @@
           <div>人民币支付 实时汇率 零手续费</div>
           <div>扫描以下二维码支付</div>
           <div>请务必截图，以便上传支付凭证</div>
-          <div class="paycode">
+          <div class="paycode" @click="previewCode">
             <image src="/static/paycode.jpg" mode="widthFix" style="width:100%;" />
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
@@ -133,7 +133,12 @@
 </template>
 
 <script>
-const payConfig = ["RoyalPay", "银行卡转账", "RMB支付", "货到付款"];
+const payConfig = [
+  { label: "RoyalPay  0.88%手续费", value: "RoyalPay" },
+  { label: "澳元转账全款支付", value: "银行卡转账" },
+  { label: "RMB支付 零手续费", value: "RMB支付" },
+  { label: "货到付款现金支付", value: "货到付款" }
+];
 import { mapState } from "vuex";
 import { checkBill } from "@/util";
 export default {
@@ -151,13 +156,18 @@ export default {
     paymentWay() {
       const _this = this;
       uni.showActionSheet({
-        itemList: payConfig,
+        itemList: payConfig.map(item => item.label),
         success: function(res) {
-          _this.payMode = payConfig[res.tapIndex];
+          _this.payMode = payConfig[res.tapIndex].value;
         },
         fail: function(res) {
           console.log(res.errMsg);
         }
+      });
+    },
+    previewCode() {
+      uni.previewImage({
+        urls: ["https://freshgo123.com/file/paymentQr.jpg"]
       });
     },
     updateOrder() {
@@ -282,15 +292,24 @@ export default {
             },
             success: res => {
               if (res.statusCode === 200) {
-                uni.showToast({
-                  title: "上传成功"
+                uni.showModal({
+                  title: "提示", //提示的标题,
+                  content: "上传成功", //提示的内容,
+                  showCancel: false,
+                  success: async res => {
+                    if (res.confirm) {
+                      uni.switchTab({
+                        url: "/pages/my"
+                      });
+                      // this.$refs.tab.refetch();
+                    } else if (res.cancel) {
+                      uni.switchTab({
+                        url: "/pages/my"
+                      });
+                    }
+                  }
                 });
                 _this.updateOrder();
-                setTimeout(() => {
-                  uni.switchTab({
-                    url: "/pages/my"
-                  });
-                }, 1000);
               } else {
                 uni.showToast({
                   title: "上传失败",
@@ -341,6 +360,7 @@ export default {
   }
   .row {
     display: flex;
+    align-items: center;
     &:not(:last-child) {
       margin-bottom: 20rpx;
     }

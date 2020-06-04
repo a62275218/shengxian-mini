@@ -15,7 +15,7 @@
         <div class="veriCode">
           <input
             :class="{'pass':veriPass,'fail':!veriPass}"
-            type="text"
+            type="number"
             v-model="veriCode"
             @input="verifyCode"
           />
@@ -40,9 +40,7 @@
             @blur="searchGeoLocation"
           />
         </div>
-        <div @click="getLocation" class="getGeo">
-          获取地址
-        </div>
+        <div @click="getLocation" class="getGeo">获取地址</div>
       </div>
     </div>
     <div class="gap"></div>
@@ -88,7 +86,7 @@ export default {
       }
       _this.fetchingAddr = true;
       const geoRes = await this.$request("googleFindAddress", {
-        loading:true,
+        loading: true,
         data: {
           input: value
         }
@@ -179,35 +177,43 @@ export default {
       }
     },
     async changeUser() {
+      let errMsg = "";
+      if (!this.phone) {
+        errMsg = "请输入电话";
+      }
+      if (!this.name) {
+        errMsg = "请输入姓名";
+      }
+      if (!this.wechat) {
+        errMsg = "请输入微信号";
+      }
+      if (!this.address) {
+        errMsg = "请选择有效地址";
+      }
       if (this.fetchingAddr) {
-        uni.showToast({
-          title: "正在获取地址中,请勿提交",
-          icon: "none"
-        });
-        return;
+        errMsg = "正在获取地址中,请勿提交";
       }
       if (this.address) {
         if (!this.subName || !this.addValid) {
-          uni.showToast({
-            title: "请选择有效地址",
-            icon: "none"
-          });
-          return;
+          errMsg = "请选择有效地址";
         }
       }
       if (this.phone !== this.userInfo.phone && !this.veriPass) {
+        errMsg = "请输入有效的验证码";
+      }
+      if (errMsg) {
         uni.showToast({
-          title: "请输入有效的验证码",
+          title: errMsg,
           icon: "none"
         });
         return;
       }
-      console.log(this.veriPass);
       const newUser = await this.$request("updateUserDetailById", {
         loading: true,
         data: {
           id: this.userInfo.id,
           username: this.userInfo.username,
+          imgUrl:this.userInfo.imgUrl,
           openId: this.userInfo.openId,
           name: this.name,
           phone: this.phone,
@@ -245,9 +251,9 @@ export default {
     text-align: center;
     width: 200rpx;
   }
-  .getGeo{
-    width:140rpx;
-    padding:0 20rpx;
+  .getGeo {
+    width: 140rpx;
+    padding: 0 20rpx;
     color: #1d90fc;
   }
   .veriCode {

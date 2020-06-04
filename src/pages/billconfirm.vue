@@ -16,7 +16,7 @@
         <div class="veriCode">
           <input
             :class="{'pass':veriPass,'fail':!veriPass}"
-            type="text"
+            type="number"
             v-model="veriCode"
             @input="verifyCode"
           />
@@ -235,7 +235,8 @@ export default {
       } else {
         uni.showToast({
           title: "该日期无法配送,7pm前下单可隔日送货,周日和特定节假日不送货",
-          icon: "none"
+          icon: "none",
+          duration:6000
         });
       }
     },
