@@ -33,7 +33,7 @@
           <image style="width:34rpx;" :src="judgeSortImg(item.status)" mode="widthFix" />
         </div>
       </div>
-      <div class="products">
+      <div class="products" v-if="!productLoading && show">
         <div class="product-item" v-for="item in filterProductList" :key="item.id">
           <productcard imgHeight="300rpx" :item="item" />
         </div>
@@ -53,6 +53,7 @@ export default {
         { name: "最新", status: "" },
         { name: "价格", status: "" }
       ],
+      show: false,
       searchWord: "",
       tagId: "",
       multiIndex: [0, 0],
@@ -60,8 +61,20 @@ export default {
       subCategoryList: []
     };
   },
+  onUnload() {
+    this.categoryList = [];
+    this.subCategoryList = [];
+    this.show = false;
+  },
+  watch: {
+    productLoading(val) {
+      if (!val) {
+        this.show = true;
+      }
+    }
+  },
   computed: {
-    ...mapState(["filterProductList"]),
+    ...mapState(["filterProductList", "productLoading"]),
     currentCategory() {
       return this.categoryList[this.multiIndex[0]];
     },

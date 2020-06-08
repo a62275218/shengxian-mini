@@ -109,6 +109,12 @@ export default {
       tempFilePath: ""
     };
   },
+  onUnload(){
+    console.log('hide')
+  },
+  beforeDestroy(){
+    console.log('hide')
+  },
   async onLoad(options) {
     const { id } = options;
     let product;

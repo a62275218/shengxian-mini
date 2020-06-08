@@ -1,67 +1,62 @@
 <template>
   <div class="bg">
+    <kefubtn />
     <cartbtn />
     <div class="white-card top">
       <div class="search">
         <searchbar placeholder="搜索" @search="goSearchList" />
       </div>
-      <skeleton :config="[{row:3},{row:3}]" :loading="bannerLoading">
-        <swiper style="height:380rpx">
-          <block v-for="item in banners" :key="item.id">
-            <swiper-item @click="goProduct(item)">
-              <imagep :src="item.imgUrl" @load="(item)=>handleLoad(item)" />
-            </swiper-item>
-          </block>
-        </swiper>
-      </skeleton>
-      <skeleton :config="[{row:3},{row:3}]" :loading="cateLoading">
-        <div class="category">
-          <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
-            <image class="logo" :src="item.imgUrl" mode="widthFix" />
-            <div>{{item.name}}</div>
-          </div>
+      <swiper style="height:380rpx">
+        <block v-for="item in banners" :key="item.id">
+          <swiper-item @click="goProduct(item)">
+            <imagep :src="item.imgUrl" @load="(item)=>handleLoad(item)" />
+          </swiper-item>
+        </block>
+      </swiper>
+      <div class="category">
+        <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
+          <image class="logo" :src="item.imgUrl" mode="widthFix" />
+          <div>{{item.name}}</div>
         </div>
-      </skeleton>
+      </div>
     </div>
-    <skeleton :config="[{row:4},{row:4}]" :loading="productLoading || adLoading">
-      <div class="gap"></div>
-      <div class="white-card trotting" v-if="brodcasts.length">
-        <image class="icon" mode="widthFix" src="/static/laba.png" />
-        <div class="container">
-          <div class="broadcast">
-            <div v-for="broadcast in brodcasts" :key="broadcast.id">{{broadcast.notifyText}}</div>
+    <div class="gap"></div>
+    <div class="white-card trotting" v-if="brodcasts.length">
+      <image class="icon" mode="widthFix" src="/static/laba.png" />
+      <div class="container">
+        <div class="broadcast">
+          <div v-for="broadcast in brodcasts" :key="broadcast.id">{{broadcast.notifyText}}</div>
+        </div>
+      </div>
+    </div>
+    <div class="gap"></div>
+    <div class="white-card ad-card">
+      <image :src="firstAd" style="width:100%;vertical-align:middle" mode="widthFix" />
+    </div>
+    <div class="gap"></div>
+    <block v-for="item in indexProducts" :key="item.id">
+      <div class="white-card product-card">
+        <div class="header">
+          <div class="hot">
+            <image src="/static/shuxian.png" mode="widthFix" style="width:8rpx" />
+            {{item.name}}
+          </div>
+          <div class="more" @click="goTagList(item.id)">
+            查看更多
+            <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:22rpx" />
+          </div>
+        </div>
+        <div class="product-list">
+          <div class="product-item" v-for="product in item.product" :key="product.id">
+            <productcard imgHeight="200rpx" :item="product" :breakLine="true" />
           </div>
         </div>
       </div>
       <div class="gap"></div>
-      <div class="white-card ad-card">
-        <image :src="firstAd" style="width:100%;vertical-align:middle" mode="widthFix" />
-      </div>
-      <div class="gap"></div>
-      <block v-for="item in indexProducts" :key="item.id">
-        <div class="white-card product-card">
-          <div class="header">
-            <div class="hot">
-              <image src="/static/shuxian.png" mode="widthFix" style="width:8rpx" />
-              {{item.name}}
-            </div>
-            <div class="more" @click="goTagList(item.id)">
-              查看更多
-              <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:22rpx" />
-            </div>
-          </div>
-          <div class="product-list">
-            <div class="product-item" v-for="product in item.product" :key="product.id">
-              <productcard imgHeight="200rpx" :item="product" :breakLine="true"/>
-            </div>
-          </div>
-        </div>
-        <div class="gap"></div>
-      </block>
-      <div class="white-card ad-card">
-        <image :src="secondAd" style="width:100%;vertical-align:middle" mode="widthFix" />
-      </div>
-    </skeleton>
+    </block>
+    <div class="white-card ad-card">
+      <image :src="secondAd" style="width:100%;vertical-align:middle" mode="widthFix" />
+    </div>
     <div class="page-gap"></div>
   </div>
 </template>
@@ -100,10 +95,10 @@ export default Vue.extend({
     customModal,
     tabBar
   },
-  onShareAppMessage(){
+  onShareAppMessage() {
     return {
-      path:'/pages/index'
-    }
+      path: "/pages/index"
+    };
   },
   methods: {
     handleLoad(item) {
@@ -144,19 +139,22 @@ export default Vue.extend({
     },
     async fetchBanner() {
       this.bannerLoading = true;
-      const bannerRes = await this.$request("fetchBanner", {});
+      const bannerRes = await this.$request("fetchBanner", { loading: true });
       this.bannerLoading = false;
       this.banners = bannerRes;
     },
     async fetchHomePageCategories() {
       this.cateLoading = true;
-      const category = await this.$request("fetchHomePageCategories", {});
+      const category = await this.$request("fetchHomePageCategories", {
+        loading: true
+      });
       this.category = category;
       this.cateLoading = false;
     },
     async fetchAds() {
       this.adLoading = true;
       const ads = await this.$request("fetchAdByType", {
+        loading: true,
         data: {
           type: "首页"
         }
@@ -169,7 +167,7 @@ export default Vue.extend({
     },
     async fetchProducts() {
       this.productLoading = true;
-      const tags = await this.$request("fetchTag", {});
+      const tags = await this.$request("fetchTag", { loading: true });
       this.productLoading = false;
       if (tags && tags.length) {
         tags.forEach(item => {

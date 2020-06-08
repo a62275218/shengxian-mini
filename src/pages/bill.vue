@@ -9,7 +9,6 @@
       :defaultIndex="defaultIndex"
     />
     <div class="gap"></div>
-    <skeleton :config="[{row:7},{row:7},{row:7}]" :loading="loading">
       <block v-for="bill in bills" :key="bill.id">
         <div class="white-card bill">
           <div class="top">
@@ -52,7 +51,6 @@
         <div class="gap"></div>
       </block>
       <div class="empty" v-if="!loading && !bills.length">暂无内容</div>
-    </skeleton>
     <div class="page-gap"></div>
   </div>
 </template>
@@ -147,6 +145,7 @@ export default {
       this.loading = true;
       const label = this.list[index].label;
       const billRes = await this.$request("fetchOrderByUserIdAndStatus", {
+        loading:true,
         data: {
           id: this.userInfo.id,
           status: label

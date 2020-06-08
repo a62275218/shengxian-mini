@@ -10,17 +10,16 @@
       >{{item.name}}</div>
     </div>
     <scroll-view class="content" scroll-y="true">
-      <div v-if="!subloading && !subcategory.length" class="empty">暂无内容</div>
-      <skeleton :config="[{row:7},{row:7},{row:7}]" :loading="subloading">
-        <div class="sublist">
-          <div class="subitem" @click="goList(item.id)" v-for="item in subcategory" :key="item.id">
-            <div class="img">
-              <imagep :src="item.imgUrl" />
-            </div>
-            <div>{{item.name}}</div>
+      <div v-if="!subcategory.length" class="empty">暂无内容</div>
+
+      <div class="sublist">
+        <div class="subitem" @click="goList(item.id)" v-for="item in subcategory" :key="item.id">
+          <div class="img">
+            <imagep :src="item.imgUrl" />
           </div>
+          <div>{{item.name}}</div>
         </div>
-      </skeleton>
+      </div>
     </scroll-view>
   </div>
 </template>
@@ -31,11 +30,10 @@ export default {
     return {
       category: [],
       subcategory: [],
-      subloading: true,
       index: 0
     };
   },
-  async onShow() {
+  async mounted() {
     const category = await this.$request("fetchCategories", {});
     category[0].active = true;
     this.getSubCategory(category[0].id);
@@ -57,16 +55,15 @@ export default {
       });
     },
     async getSubCategory(id) {
-      this.subloading = true;
       const subcategory = await this.$request(
         "fetchSubCategoriesByCategoriesId",
         {
+          loading:true,
           data: {
             id
           }
         }
       );
-      this.subloading = false;
       this.subcategory = subcategory;
     }
   }

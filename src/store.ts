@@ -17,11 +17,13 @@ const store = new Vuex.Store({
     historyList: [],
     serviceList: [],
     pendingBill: false,
+    productLoading:false,
     categoryList: [],
   },
   actions: {
     fetchProductList: async ({ state, commit }, payload) => {
       const { keyword, orderBy, subCategoriesId, categoriesId } = payload;
+      state.productLoading = true
       const productRes = await request("fetchProductBySth", {
         data: {
           ...payload,
@@ -29,6 +31,7 @@ const store = new Vuex.Store({
         loading: true,
       });
       const filterProductList = getIn(productRes, "data");
+      state.productLoading = false
       if (filterProductList) {
         state.filterProductList = filterProductList;
       }
