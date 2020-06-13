@@ -106,12 +106,22 @@ export default {
         }
       );
       this.subCategoryList = subcategory;
-      this.multiIndex[1] = subcategory.findIndex(item => item.id == subid);
+      this.$set(
+        this.multiIndex,
+        1,
+        subcategory.findIndex(item => item.id == subid)
+      );
     } else {
       this.subCategoryList = [];
     }
     if (categoryid) {
-      this.multiIndex[0] = category.findIndex(item => item.id == categoryid);
+      this.$set(
+        this.multiIndex,
+        0,
+        category.findIndex(item => item.id == Number(categoryid))
+      );
+    }else{
+      this.categoryList = []
     }
     if (tagid) {
       this.tagId = tagid;
@@ -172,6 +182,13 @@ export default {
       this.filterProducts();
     },
     async filterProducts() {
+      console.log({
+        keyword: this.searchWord || "",
+        orderBy,
+        subCategoriesId: this.subCategoryId,
+        categoriesId: this.categoryId,
+        tagId: this.tagId
+      });
       const current = this.filterTab.find(item => {
         return item.status !== "";
       });

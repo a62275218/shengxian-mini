@@ -1,5 +1,8 @@
 <template>
   <div class="bg">
+    <custommodal :visible="loading">
+      <div class="loading">上传中...</div>
+    </custommodal>
     <div style="width:90%;margin:0 auto;">
       <div class="white-card bill">
         <div class="bill-title">订单信息</div>
@@ -71,17 +74,24 @@
         </div>
       </div>
       <div class="gap"></div>
-      <div class="row-card" @click="paymentWay">
+      <div class="row-card" @click="paymentWay(false)">
         <div class="row">
           <div class="title">支付方式</div>
           <div style="display:flex;align-items:center">
-            <div style="margin-right:20rpx;">{{payMode}}</div>
+            <div style="margin-right:20rpx;">{{bound?'货到付款':payMode}}</div>
             <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
           </div>
         </div>
       </div>
       <div class="gap"></div>
-      <div class="white-card pay-desc" v-if="payMode !=='RoyalPay' && payMode">
+      <div class="white-card pay-desc" v-if="payMode !=='RoyalPay' && payMode || bound">
+        <block v-if="bound">
+          <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?pendingBill.price-20:0}} 澳币，尾款目前只支持现金支付</div>
+          <div>请确保送货当天家中有人</div>
+          <div>请准备好现金支付尾款</div>
+          <div>请您支付定金以确认下单</div>
+          <button class="button" @click="paymentWay(true)">支付定金</button>
+        </block>
         <block v-if="payMode ==='银行卡转账'">
           <div>请务必截图，以便上传支付凭证</div>
           <div>Commonwealth Bank</div>
@@ -104,15 +114,16 @@
           <div>扫描以下二维码支付</div>
           <div>请务必截图，以便上传支付凭证</div>
           <div class="paycode" @click="previewCode">
-            <image src="/static/paycode.jpg" mode="widthFix" style="width:100%;" />
+            <image src="https://freshgo123.com/file/paymentQr.jpg" mode="widthFix" style="width:100%;" />
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>
         <block v-else-if="payMode ==='货到付款'">
-          <div>货到付款 只支持现金支付</div>
-          <div>请确保送货当天您家中有人收货</div>
-          <div>请您提前准备现金</div>
-          <button class="button" @click="confirmProductArrival">确认下单</button>
+          <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?pendingBill.price-20:0}} 澳币，尾款目前只支持现金支付</div>
+          <div>请确保送货当天家中有人</div>
+          <div>请准备好现金支付尾款</div>
+          <div>请您支付定金以确认下单</div>
+          <button class="button" @click="paymentWay(true)">支付定金</button>
         </block>
         <button open-type="contact" class="button">联系客服</button>
         <div style="10rpx;"></div>
@@ -124,8 +135,9 @@
       <div class="page-gap"></div>
       <div class="page-gap"></div>
       <div class="page-gap"></div>
-      <div class="bottom-control" v-if="payMode==='RoyalPay' || !payMode">
-        <div class="left">{{payMode?'手续费 0.88%':'请在订单底部选择支付方式'}}</div>
+      <div class="bottom-control" v-if="payMode==='RoyalPay' || !payMode || bound">
+        <div class="left">{{payMode === 'RoyalPay'?'手续费 0.88%':bound?'':'请在订单底部选择支付方式'}}</div>
+        <div class="right" v-if="bound" style="align-self: center;padding-right:20rpx;">请支付20澳元定金</div>
         <div class="confirm" v-if="payMode==='RoyalPay'" @click="payBill">立即支付</div>
       </div>
     </div>
@@ -134,10 +146,10 @@
 
 <script>
 const payConfig = [
-  { label: "RoyalPay  0.88%手续费", value: "RoyalPay" },
-  { label: "澳元转账全款支付", value: "银行卡转账" },
+  { label: "Royalpay 微信支付", value: "RoyalPay" },
+  { label: "澳元转账 全款支付", value: "银行卡转账" },
   { label: "RMB支付 零手续费", value: "RMB支付" },
-  { label: "货到付款现金支付", value: "货到付款" }
+  { label: "货到付款 定金$20", value: "货到付款" }
 ];
 import { mapState } from "vuex";
 import { checkBill } from "@/util";
@@ -145,18 +157,28 @@ export default {
   data() {
     return {
       payMode: "",
-      enablePay: true
+      enablePay: true,
+      bound: false,
+      loading: false
     };
   },
   computed: {
     ...mapState(["pendingBill", "userInfo", "serviceList"])
   },
-
   methods: {
-    paymentWay() {
+    paymentWay(bound) {
+      let itemList = JSON.parse(
+        JSON.stringify(payConfig.map(item => item.label))
+      );
+      if (bound) {
+        itemList = itemList.filter(item => {
+          return item !== "货到付款现金支付";
+        });
+      }
+      this.bound = Boolean(bound);
       const _this = this;
       uni.showActionSheet({
-        itemList: payConfig.map(item => item.label),
+        itemList,
         success: function(res) {
           _this.payMode = payConfig[res.tapIndex].value;
         },
@@ -174,10 +196,11 @@ export default {
       this.$request("updateOrder", {
         data: {
           orderId: this.pendingBill.orderId,
-          paymentWay: this.payMode,
-          status: "配送中"
+          paymentWay: this.bound ? "货到付款" : this.payMode,
+          status: "待配送"
         }
       });
+      uni.hideLoading();
     },
     async confirmProductArrival() {
       uni.showModal({
@@ -190,7 +213,7 @@ export default {
               data: {
                 orderId: this.pendingBill.orderId,
                 paymentWay: this.payMode,
-                status: "配送中"
+                status: "待配送"
               }
             });
             if (res) {
@@ -213,7 +236,7 @@ export default {
       if (!this.enablePay) {
         return;
       }
-      this.updateOrder();
+      
       const _this = this;
       this.enablePay = false;
       uni.getProvider({
@@ -225,7 +248,7 @@ export default {
             data: {
               timeStamp: Date.now(),
               orderId: this.pendingBill.orderId,
-              price: this.pendingBill.price,
+              price: this.bound ? 20 : this.pendingBill.price,
               openId: this.userInfo.openId
             }
           });
@@ -247,6 +270,7 @@ export default {
                 //     return item.id;
                 //   })
                 // );
+                _this.updateOrder();
                 this.enablePay = true;
                 uni.reLaunch({ url: "/pages/payresult" });
               },
@@ -281,7 +305,7 @@ export default {
         count: 1,
         success: e => {
           const filePath = e.tempFilePaths[0];
-          uni.showLoading();
+          _this.loading = true;
           uni.uploadFile({
             url:
               "https://freshgo123.com/api/public/api/v1/uploadOrderPaymentImg",
@@ -291,12 +315,14 @@ export default {
               id: _this.pendingBill.orderId
             },
             success: res => {
+              _this.loading = false
               if (res.statusCode === 200) {
                 uni.showModal({
                   title: "提示", //提示的标题,
                   content: "上传成功", //提示的内容,
                   showCancel: false,
                   success: async res => {
+                    _this.updateOrder();
                     if (res.confirm) {
                       uni.switchTab({
                         url: "/pages/my"
@@ -309,7 +335,6 @@ export default {
                     }
                   }
                 });
-                _this.updateOrder();
               } else {
                 uni.showToast({
                   title: "上传失败",
@@ -322,8 +347,13 @@ export default {
                 title: "上传失败",
                 icon: "none"
               });
+              _this.loading = false;
             }
           });
+        },
+        fail: () => {
+          _this.loading = false;
+          uni.hideLoading();
         }
       });
     },
@@ -480,5 +510,9 @@ export default {
     align-items: center;
     justify-content: center;
   }
+}
+.loading {
+  color: #fff;
+  text-align: center;
 }
 </style>

@@ -84,6 +84,12 @@
       "style": {
         "navigationBarTitleText": "关于我们"
       }
+    },
+    {
+      "path": "pages/address",
+      "style": {
+        "navigationBarTitleText": "管理地址"
+      }
     }
   ],
   "sitemapLocation": "sitemap.json",

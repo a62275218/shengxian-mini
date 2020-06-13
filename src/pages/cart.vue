@@ -9,16 +9,30 @@
       <div>购物车空空如也</div>
     </div>
     <block v-for="(item,index) in cart" :key="item.product.id">
-      <div class="white-card item" @click="toggleActive(index)">
-        <div :class="[{'active button':item.active},{'button':!item.active}]" />
+      <div class="white-card item">
+        <div
+          :class="[{'active button':item.active},{'button':!item.active}]"
+          @click="toggleActive(index)"
+        />
         <div class="center">
-          <image :src="item.product.imgUrls[0]" style="width:200rpx;" mode="widthFix" />
+          <div style="width:200rpx;height:200rpx;">
+            <imagep
+              :src="item.product.imgUrls[0]"
+            />
+          </div>
+
           <div class="content">
             <div>{{item.product.title}}</div>
             <div class="control">
               <div class="price">${{item.product.price}}</div>
               <div style="width:200rpx">
-                <numberbox :min="1" :initialVal="item.num" :index="index" @change="changeNum" />
+                <numberbox
+                  :min="1"
+                  :max="item.product.storageNum"
+                  :initialVal="item.num"
+                  :index="index"
+                  @change="changeNum"
+                />
               </div>
             </div>
           </div>
@@ -151,7 +165,7 @@ export default {
     changeNum(num, index) {
       this.$store.commit("changeCart", {
         index,
-        num:Number(num)
+        num: Number(num)
       });
     },
     toggleSelectAll() {

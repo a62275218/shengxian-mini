@@ -2,7 +2,10 @@
   <div class="bg">
     <div class="white-card about-card">
       <div class="row" v-for="(item,index) in serviceList" :key="item.id">
-        <div>客服微信{{index+1}}: {{item.wxId}}</div>
+        <div>
+          <div>微信号: {{item.wxId}}</div>
+          <div class="light">客服{{index+1}}号</div>
+        </div>
         <div class="copy" @click="copy(item.wxId)">点此复制</div>
       </div>
     </div>
@@ -32,6 +35,12 @@ export default {
 .row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  .light{
+    font-size:26rpx;
+    color:$gray-color;
+    margin-top:10rpx;
+  }
   .copy {
     color: #fcd81d;
   }

@@ -10,7 +10,13 @@
       </div>
       <div class="row">
         <div class="input">
-          <div class="title">电话</div>
+          <div class="title" style="display:flex;align-items:center;min-width: 160rpx;">
+            电话
+            <div @click="showAction" style="display:flex;align-items:center">
+              <div style="margin:0 10rpx;">{{areaCode}}</div>
+              <image src="/static/down.png" mode="widthFix" style="width:20rpx;margin-right:10rpx;" />
+            </div>
+          </div>
           <input type="text" v-model="phone" />
         </div>
         <div class="veriCode">
@@ -23,7 +29,7 @@
           <div
             class="get"
             @click="getVeriCode"
-            v-if="(!share && !userInfo.phone) || (userInfo && phone !== userInfo.phone)"
+            v-if="(!share && !userInfo.phone) || (userInfo && (areaCode+phone) !== userInfo.phone)"
           >获取验证码</div>
         </div>
       </div>
@@ -45,7 +51,7 @@
             @blur="searchGeoLocation"
           />
         </div>
-        <div @click="getLocation" class="getGeo">获取地址</div>
+        <div @click="goAddr" class="getGeo">更换地址</div>
       </div>
       <div class="row" @click="openCalendar">
         <div class="input">
@@ -120,6 +126,7 @@ export default {
       deliveryTime: "",
       ruleText: "",
       subName: "",
+      areaCode: "+61",
       userComment: "",
       shipPrice: null,
       veriPass: false,
@@ -139,13 +146,21 @@ export default {
       this.subName = bill.subName;
       this.shipPrice = Number(bill.shipPrice);
     } else {
-      this.name = this.userInfo.name;
-      this.phone = this.userInfo.phone;
-      this.wechat = this.userInfo.wechat;
-      this.address = this.userInfo.address;
-      this.subName = this.userInfo.subName;
-      this.veriPass = Boolean(this.userInfo.phone);
-      this.fetchShipFeeBySub(this.userInfo.subName);
+      const defaultAdd = (this.userInfo.deliveryDetail || []).find(item => {
+        return item.ifDefault;
+      });
+      if (defaultAdd) {
+        this.address = defaultAdd.address;
+        this.subName = defaultAdd.subName;
+        if (defaultAdd.phone) {
+          this.phone = defaultAdd.phone.substr(3);
+          this.areaCode = defaultAdd.phone.substr(0, 3);
+        }
+        this.wechat = defaultAdd.wechat;
+        this.name = defaultAdd.name;
+        this.veriPass = Boolean(defaultAdd.phone);
+        this.fetchShipFeeBySub(defaultAdd.subName);
+      }
     }
     const rule = await this.$request("fetchRuleText", {});
     if (rule) {
@@ -158,6 +173,8 @@ export default {
       return this.cart.filter(item => item.active);
     },
     shipText() {
+      console.log("subName", this.subName);
+      console.log("shipPrice", this.shipPrice);
       if (this.subName && typeof this.shipPrice !== "number") {
         return "该地区运费需人工确认";
       }
@@ -198,6 +215,11 @@ export default {
     openCalendar() {
       this.$refs.calendar.open();
     },
+    goAddr() {
+      uni.navigateTo({
+        url: "/pages/address"
+      });
+    },
     async fetchShipFeeBySub(val) {
       if (val) {
         const shipRes = await this.$request("fetchFeeBySubName", {
@@ -207,7 +229,7 @@ export default {
             productPrice: this.totalP
           }
         });
-        if (shipRes) {
+        if (shipRes || shipRes === 0) {
           this.shipPrice = Number(shipRes);
         } else {
           uni.showToast({
@@ -236,7 +258,7 @@ export default {
         uni.showToast({
           title: "该日期无法配送,7pm前下单可隔日送货,周日和特定节假日不送货",
           icon: "none",
-          duration:6000
+          duration: 6000
         });
       }
     },
@@ -284,6 +306,16 @@ export default {
         },
         fail: function(res) {
           console.log(res.errMsg);
+        }
+      });
+    },
+    showAction() {
+      const _this = this;
+      const options = ["+61", "+86"];
+      uni.showActionSheet({
+        itemList: options,
+        success: function(res) {
+          _this.areaCode = options[res.tapIndex];
         }
       });
     },
@@ -446,8 +478,8 @@ export default {
   .veriCode {
     box-sizing: border-box;
     padding: 10rpx 20rpx;
-    min-width: 330rpx;
-    width: 330rpx;
+    min-width: 320rpx;
+    width: 320rpx;
     border-left: 2rpx solid #f0f0f0;
     display: flex;
     .pass {

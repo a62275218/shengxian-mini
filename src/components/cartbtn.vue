@@ -25,7 +25,7 @@ export default {
 .cart-btn {
   z-index: 100;
   position: fixed;
-  bottom: 160rpx;
+  bottom: 180rpx;
   right: 40rpx;
   width: 100rpx;
   height: 100rpx;

@@ -1,0 +1,468 @@
+<template>
+  <div class="bg">
+    <custommodal :visible="edit" @close="unsave">
+      <div class="white-card row-card modal">
+        <div class="row">
+          <div class="input">
+            <div class="title">姓名</div>
+            <input type="text" v-model="name" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="input">
+            <div class="title" style="display:flex;align-items:center;min-width: 160rpx;">
+              电话
+              <div @click="showAction" style="display:flex;align-items:center">
+                <div style="margin:0 10rpx;">{{areaCode}}</div>
+                <image
+                  src="/static/down.png"
+                  mode="widthFix"
+                  style="width:20rpx;margin-right:10rpx;"
+                />
+              </div>
+            </div>
+            <input style="font-size:24rpx;" type="text" v-model="phone" />
+          </div>
+          <div class="veriCode">
+            <input
+              :class="{'pass':veriPass,'fail':!veriPass}"
+              type="number"
+              v-model="veriCode"
+              @input="verifyCode"
+            />
+            <div class="get" @click="getVeriCode">获取验证码</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="input">
+            <div class="title">微信号</div>
+            <input type="text" v-model="wechat" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="input" style="width:90%;">
+            <div class="title">收货地址</div>
+            <textarea
+              placeholder-style="font-size:12rpx;"
+              type="text"
+              style="width:97%"
+              :auto-height="true"
+              v-model="address"
+              @blur="searchGeoLocation"
+            />
+          </div>
+          <div @click="getLocation" class="getGeo">获取地址</div>
+        </div>
+        <div class="bott">
+          <div class="btnb cancel" @click="()=>this.edit = false">取消</div>
+          <div class="btnb save" @click="save">保存</div>
+        </div>
+      </div>
+    </custommodal>
+    <div class="gap"></div>
+    <div class="white-card address" v-for="(detail,index) in deliveryDetail" :key="index">
+      <div class="content">
+        <div>姓名: {{detail.name}}</div>
+        <div>电话: {{detail.phone}}</div>
+        <div>微信: {{detail.wechat}}</div>
+        <div>地址: {{detail.address}}</div>
+      </div>
+      <div class="bot">
+        <div :class="[{'active left':detail.ifDefault},{'left':!detail.ifDefault}]">
+          <div class="button" @click="setDefault(index)" />
+          <div>{{detail.ifDefault?"已设为默认":"设为默认"}}</div>
+        </div>
+        <div class="right">
+          <div class="del" @click="deleteAdd(index)">删除</div>
+          <div class="edit" @click="editDetail(detail,index)">编辑</div>
+        </div>
+      </div>
+    </div>
+    <div class="page-gap"></div>
+    <div class="bottom">
+      <div class="button" @click="addNew">+新增收货地址</div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { mapState } from "vuex";
+import { formatPhoneNumber } from "@/util";
+export default {
+  computed: {
+    ...mapState(["userInfo"])
+  },
+  data() {
+    return {
+      deliveryDetail: [],
+      edit: false,
+      name: "",
+      veriPass: false,
+      veriCode: "",
+      areaCode: "+61",
+      phone: "",
+      address: "",
+      subName: "",
+      wechat: "",
+      addValid: false,
+      editing: false
+    };
+  },
+  mounted() {
+    if (this.userInfo) {
+      this.deliveryDetail = this.userInfo.deliveryDetail || [];
+    }
+  },
+  watch: {
+    phone(val) {
+      if (this.editing || this.editing === 0) {
+        this.veriPass =
+          this.areaCode + val === this.deliveryDetail[this.editing].phone;
+      }
+    },
+    areaCode(val) {
+      if (this.editing || this.editing === 0) {
+        this.veriPass =
+          val + this.phone === this.deliveryDetail[this.editing].phone;
+      }
+    }
+  },
+  async onUnload() {
+    const newUser = await this.$request("updateUserDetailById", {
+      loading: true,
+      data: {
+        id: this.userInfo.id,
+        deliveryDetail: this.deliveryDetail
+      }
+    });
+    if (newUser) {
+      this.$store.commit("updateUser", newUser);
+    }
+  },
+  methods: {
+    setDefault(index) {
+      this.deliveryDetail.forEach(
+        (item, idx) => (item.ifDefault = index === idx)
+      );
+    },
+    editDetail(detail, index) {
+      const { name, phone, wechat, address, subName } = detail;
+      this.editing = index;
+      this.$nextTick(() => {
+        this.phone = phone.substr(3);
+        this.areaCode = phone.substr(0, 3);
+      });
+      this.addValid = true;
+      this.name = name;
+      this.wechat = wechat;
+      this.address = address;
+      this.subName = subName;
+      this.edit = true;
+    },
+    deleteAdd(index) {
+      this.deliveryDetail.splice(index, 1);
+    },
+    formatPhoneNumber,
+    async save() {
+      let errMsg = "";
+      if (!this.phone) {
+        errMsg = "请输入电话";
+      }
+      if (!this.name) {
+        errMsg = "请输入姓名";
+      }
+      if (!this.wechat) {
+        errMsg = "请输入微信号";
+      }
+      if (!this.address) {
+        errMsg = "请选择有效地址";
+      }
+      if (this.address) {
+        if (!this.subName || !this.addValid) {
+          errMsg = "请选择有效地址";
+        }
+      }
+      if (this.phone !== this.userInfo.phone && !this.veriPass) {
+        errMsg = "请输入有效的验证码";
+      }
+      if (errMsg) {
+        uni.showToast({
+          title: errMsg,
+          icon: "none"
+        });
+        return;
+      }
+      if (!this.editing && this.editing !== 0) {
+        this.deliveryDetail.push({
+          ifDefault: false,
+          name: this.name,
+          address: this.address,
+          subName: this.subName,
+          wechat: this.wechat,
+          phone: this.areaCode + this.phone
+        });
+      } else {
+        const detail = this.deliveryDetail[this.editing];
+        detail.name = this.name;
+        detail.address = this.address;
+        detail.subName = this.subName;
+        detail.wechat = this.wechat;
+        detail.phone = this.areaCode + this.phone;
+      }
+      this.edit = false;
+    },
+    async searchGeoLocation(e) {
+      const _this = this;
+      const { value } = e.detail;
+      if (!value) {
+        this.subName = "";
+        return;
+      }
+      _this.fetchingAddr = true;
+      const geoRes = await this.$request("googleFindAddress", {
+        loading: true,
+        data: {
+          input: value
+        }
+      });
+      if (!geoRes || !geoRes.length) {
+        uni.showToast({
+          title: "获取地理位置失败",
+          icon: "none"
+        });
+        _this.address = this.userInfo.address;
+        _this.addValid = false;
+        _this.fetchingAddr = false;
+        return;
+      }
+      uni.showActionSheet({
+        itemList: geoRes.map(item => item.address),
+        success: function(res) {
+          _this.address = geoRes[res.tapIndex].address;
+          _this.subName = geoRes[res.tapIndex].subName;
+          _this.addValid = true;
+          _this.fetchingAddr = false;
+        },
+        fail: function(res) {
+          _this.fetchingAddr = false;
+        }
+      });
+    },
+    unsave() {
+      this.edit = false;
+      this.phone = "";
+      this.name = "";
+      this.veriCode = "";
+      this.areaCode = "+61";
+      this.veriPass = false;
+      this.editing = false;
+    },
+    showAction() {
+      const _this = this;
+      const options = ["+61", "+86"];
+      uni.showActionSheet({
+        itemList: options,
+        success: function(res) {
+          _this.areaCode = options[res.tapIndex];
+        }
+      });
+    },
+    addNew() {
+      this.edit = true;
+    },
+    verifyCode(e) {
+      if (this.veriMatch) {
+        this.veriPass = e.detail.value === this.veriMatch;
+      }
+    },
+    getLocation() {
+      const _this = this;
+      _this.fetchingAddr = true;
+      uni.getLocation({
+        type: "wgs84",
+        success: async function(res) {
+          const geoRes = await _this.$request("googleFindAddressByLatlng", {
+            loading: true,
+            data: {
+              latlng: `${res.latitude},${res.longitude}`
+            }
+          });
+          if (!geoRes) {
+            uni.showToast({
+              title: "获取地理位置失败",
+              icon: "none"
+            });
+            _this.address = this.userInfo.address;
+            _this.addValid = false;
+          } else {
+            _this.address = geoRes.address;
+            _this.subName = geoRes.subName;
+            _this.addValid = true;
+          }
+        },
+        fail: () => {
+          uni.showToast({
+            title: "获取地理位置失败",
+            icon: "none"
+          });
+          _this.address = this.userInfo.address;
+          _this.addValid = false;
+          _this.fetchingAddr = false;
+        }
+      });
+    },
+    async getVeriCode() {
+      const veriRes = await this.$request("phoneSendVaildMessage", {
+        loading: true,
+        data: {
+          phone: formatPhoneNumber(this.phone, this.areaCode)
+        }
+      });
+      if (veriRes) {
+        uni.showToast({
+          title: "发送验证码成功"
+        });
+        this.veriMatch = String(veriRes);
+      } else {
+        uni.showToast({
+          title: "获取验证码失败",
+          icon: "none"
+        });
+      }
+    },
+    verifyCode(e) {
+      if (this.veriMatch) {
+        this.veriPass = e.detail.value === this.veriMatch;
+      }
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.modal {
+  padding: 0;
+  .row {
+    padding-left: 14rpx;
+  }
+}
+.address {
+  width: 90%;
+  margin: 0 auto 20rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  .content {
+    padding: 20rpx;
+    line-height: 46rpx;
+  }
+  .bot {
+    padding: 20rpx;
+    border-top: 2rpx solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    .left {
+      color: #bdbdbd;
+      display: flex;
+      align-items: center;
+      .button {
+        width: 30rpx;
+        height: 30rpx;
+        border-radius: 50%;
+        border: 2rpx solid #bdbdbd;
+        margin-right: 20rpx;
+      }
+    }
+    .right {
+      display: flex;
+      align-items: center;
+      .del {
+        color: #df2d2d;
+      }
+      .edit {
+        color: #9c9c9c;
+        margin-left: 30rpx;
+      }
+    }
+
+    .active {
+      color: #ffcb34;
+      .button {
+        border: 2rpx solid #ffcb34;
+        position: relative;
+        &:after {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          width: 50%;
+          height: 50%;
+          border-radius: 50%;
+          background: #ffcb34;
+        }
+      }
+    }
+  }
+}
+
+.bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 20rpx 0;
+  width: 100%;
+  .button {
+    margin: 0 auto;
+    width: 90%;
+    background: #fcd81d;
+    border-radius: 100rpx;
+    font-size: 30rpx;
+    text-align: center;
+    padding: 20rpx;
+    box-sizing: border-box;
+  }
+}
+
+.veriCode {
+  box-sizing: border-box;
+  padding: 10rpx 20rpx;
+  min-width: 260rpx;
+  width: 260rpx;
+  border-left: 2rpx solid #f0f0f0;
+  display: flex;
+  font-size: 24rpx;
+  .pass {
+    color: rgb(21, 201, 45);
+  }
+  .fail {
+    color: red;
+  }
+  .get {
+    min-width: 140rpx;
+    color: #1d90fc;
+  }
+}
+.getGeo {
+  width: 140rpx;
+  padding: 0 20rpx;
+  color: #1d90fc;
+  font-size: 24rpx;
+}
+
+.bott {
+  padding: 20rpx 0;
+  display: flex;
+  justify-content: space-around;
+  .btnb {
+    padding: 20rpx 90rpx;
+    border-radius: 100rpx;
+  }
+  .cancel {
+    color: #777777;
+    background: #ededed;
+  }
+  .save {
+    background: #fcd81d;
+  }
+}
+</style>

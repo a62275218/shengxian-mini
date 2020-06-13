@@ -9,7 +9,13 @@
       </div>
       <div class="row">
         <div class="input">
-          <div class="title">电话</div>
+          <div class="title" style="display:flex;align-items:center;min-width: 160rpx;">
+            电话
+            <div @click="showAction" style="display:flex;align-items:center">
+              <div style="margin:0 10rpx;">{{areaCode}}</div>
+              <image src="/static/down.png" mode="widthFix" style="width:20rpx;margin-right:10rpx;" />
+            </div>
+          </div>
           <input type="text" v-model="phone" />
         </div>
         <div class="veriCode">
@@ -40,7 +46,7 @@
             @blur="searchGeoLocation"
           />
         </div>
-        <div @click="getLocation" class="getGeo">获取地址</div>
+        <div @click="goAddr" class="getGeo">更换地址</div>
       </div>
     </div>
     <div class="gap"></div>
@@ -61,6 +67,7 @@ export default {
       subName: "",
       veriPass: false,
       veriCode: "",
+      areaCode: "+61",
       veriMatch: "",
       addValid: true,
       fetchingAddr: false
@@ -69,12 +76,29 @@ export default {
   computed: {
     ...mapState(["userInfo"])
   },
-  mounted() {
-    this.name = this.userInfo.name;
-    this.phone = this.userInfo.phone;
-    this.wechat = this.userInfo.wechat;
-    this.address = this.userInfo.address;
-    this.subName = this.userInfo.subName;
+  onShow() {
+    const defaultAdd = (this.userInfo.deliveryDetail || []).find(item => {
+      return item.ifDefault;
+    });
+    if (defaultAdd) {
+      this.address = defaultAdd.address;
+      this.subName = defaultAdd.subName;
+      if (defaultAdd.phone) {
+        this.phone = this.userInfo.phone.substr(3);
+        this.areaCode = this.userInfo.phone.substr(0, 3);
+      }
+      this.wechat = defaultAdd.wechat;
+      this.name = defaultAdd.name;
+      this.veriPass = Boolean(defaultAdd.phone);
+    }
+  },
+  watch: {
+    phone(val) {
+      this.veriPass = this.areaCode + val === this.userInfo.phone;
+    },
+    areaCode(val) {
+      this.veriPass = val + this.phone === this.userInfo.phone;
+    }
   },
   methods: {
     async searchGeoLocation(e) {
@@ -111,6 +135,21 @@ export default {
         },
         fail: function(res) {
           _this.fetchingAddr = false;
+        }
+      });
+    },
+    goAddr() {
+      uni.navigateTo({
+        url: "/pages/address"
+      });
+    },
+    showAction() {
+      const _this = this;
+      const options = ["+61", "+86"];
+      uni.showActionSheet({
+        itemList: options,
+        success: function(res) {
+          _this.areaCode = options[res.tapIndex];
         }
       });
     },
@@ -161,7 +200,7 @@ export default {
       const veriRes = await this.$request("phoneSendVaildMessage", {
         loading: true,
         data: {
-          phone: formatPhoneNumber(this.phone)
+          phone: formatPhoneNumber(this.phone, this.areaCode)
         }
       });
       if (veriRes) {
@@ -208,18 +247,23 @@ export default {
         });
         return;
       }
+
+      const defaultAdd = (this.userInfo.deliveryDetail || []).find(item => {
+        return item.ifDefault;
+      });
       const newUser = await this.$request("updateUserDetailById", {
         loading: true,
         data: {
           id: this.userInfo.id,
           username: this.userInfo.username,
-          imgUrl:this.userInfo.imgUrl,
+          imgUrl: this.userInfo.imgUrl,
           openId: this.userInfo.openId,
           name: this.name,
-          phone: this.phone,
+          phone: this.areaCode + this.phone,
           address: this.address,
           subName: this.subName,
-          wechat: this.wechat
+          wechat: this.wechat,
+          deliveryDetail: this.userInfo.deliveryDetail
         }
       });
 
@@ -259,8 +303,8 @@ export default {
   .veriCode {
     box-sizing: border-box;
     padding: 10rpx 20rpx;
-    min-width: 330rpx;
-    width: 330rpx;
+    min-width: 320rpx;
+    width: 320rpx;
     border-left: 2rpx solid #f0f0f0;
     display: flex;
     .pass {

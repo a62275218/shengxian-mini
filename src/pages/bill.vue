@@ -9,48 +9,50 @@
       :defaultIndex="defaultIndex"
     />
     <div class="gap"></div>
-      <block v-for="bill in bills" :key="bill.id">
-        <div class="white-card bill">
-          <div class="top">
-            <div>订单号: {{bill.orderId}}</div>
-            <div>{{bill.status}}</div>
-          </div>
-          <div class="content">
-            <div class="row" v-for="item in bill.orderDetail" :key="item.id">
-              <image :src="item.imgUrls[0]" style="width:100rpx" mode="widthFix" />
-              <div class="title">{{item.title}}</div>
-              <div class="price">
-                <div>$ {{item.price}}</div>
-                <div>X {{item.buyNum}}</div>
-              </div>
-            </div>
-            <div class="total">
-              <div style="flex:1;"></div>
-              <div class="count">
-                <div style="margin-right:20rpx;">共{{bill.orderDetail.length}}件商品</div>
-                <div>
-                  实付
-                  <span class="price">
-                    <span style="font-size:24rpx;">$</span>
-                    {{bill.price}}
-                  </span>
-                </div>
-              </div>
+    <block v-for="bill in bills" :key="bill.id">
+      <div class="white-card bill">
+        <div class="top">
+          <div>订单号: {{bill.orderId}}</div>
+          <div>{{bill.status}}</div>
+        </div>
+        <div class="content">
+          <div class="row" v-for="item in bill.orderDetail" :key="item.id">
+            <image :src="item.imgUrls[0]" style="width:100rpx" mode="widthFix" />
+            <div class="title">{{item.title}}</div>
+            <div class="price">
+              <div>$ {{item.price}}</div>
+              <div>X {{item.buyNum}}</div>
             </div>
           </div>
-          <div class="bottom">
-            <div class="deliveryImg" @click="preview(bill.deliveryImg)">送货图片</div>
-            <div v-if="bill.paymentImg" class="deliveryImg" @click="preview(bill.paymentImg)">查看凭证</div>
-            <div class="control">
-              <div class="cancel btn" @click="cancelOrder(bill)" v-if="currentIndex === 0">取消订单</div>
-              <div class="pay btn" @click="goPayment(bill)" v-if="currentIndex === 0">立即支付</div>
-              <div class="pay btn" @click="confirmBill(bill)" v-if="currentIndex === 1">确认收货</div>
+          <div class="total">
+            <div style="flex:1;"></div>
+            <div class="count">
+              <div style="margin-right:20rpx;">共{{bill.orderDetail.length}}件商品</div>
+              <div>
+                实付
+                <span class="price">
+                  <span style="font-size:24rpx;">$</span>
+                  {{bill.price}}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="gap"></div>
-      </block>
-      <div class="empty" v-if="!loading && !bills.length">暂无内容</div>
+        <div class="bottom">
+          <div style="display:flex;">
+            <div class="deliveryImg" @click="preview(bill.deliveryImg)">送货图片</div>
+            <div v-if="bill.paymentImg" class="deliveryImg" @click="preview(bill.paymentImg)">查看凭证</div>
+          </div>
+          <div class="control">
+            <div class="cancel btn" @click="cancelOrder(bill)" v-if="currentIndex === 0">取消订单</div>
+            <div class="pay btn" @click="goPayment(bill)" v-if="currentIndex === 0">立即支付</div>
+            <div class="pay btn" @click="confirmBill(bill)" v-if="currentIndex === 1">确认收货</div>
+          </div>
+        </div>
+      </div>
+      <div class="gap"></div>
+    </block>
+    <div class="empty" v-if="!loading && !bills.length">暂无内容</div>
     <div class="page-gap"></div>
   </div>
 </template>
@@ -62,7 +64,7 @@ export default {
     return {
       list: [
         { label: "待付款" },
-        { label: "配送中" },
+        { label: "待配送" },
         { label: "已完成" },
         { label: "已退款" }
       ],
@@ -80,7 +82,7 @@ export default {
     this.defaultIndex = this.list.findIndex((item, index) => {
       return item.label === type;
     });
-    console.log(this.defaultIndex)
+    console.log(this.defaultIndex);
     this.$refs.tab.refetch();
   },
   methods: {
@@ -145,7 +147,7 @@ export default {
       this.loading = true;
       const label = this.list[index].label;
       const billRes = await this.$request("fetchOrderByUserIdAndStatus", {
-        loading:true,
+        loading: true,
         data: {
           id: this.userInfo.id,
           status: label
@@ -207,7 +209,7 @@ export default {
   }
   .row {
     display: flex;
-    align-items:center;
+    align-items: center;
     &:not(:last-child) {
       margin-bottom: 20rpx;
     }
@@ -228,6 +230,7 @@ export default {
     align-items: center;
     .deliveryImg {
       color: #1d90fc;
+      margin-right:10rpx;
     }
     .control {
       display: flex;

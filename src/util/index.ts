@@ -115,9 +115,9 @@ export function request(url: string, param: IRequestParam) {
   });
 }
 
-export function formatPhoneNumber(phone) {
+export function formatPhoneNumber(phone, area) {
   const returnPhone = phone.startsWith("0") ? phone.substr(1) : phone;
-  return "+61" + returnPhone;
+  return area + returnPhone;
 }
 
 export function debounce(func, wait) {

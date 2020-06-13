@@ -1,6 +1,6 @@
 <template>
   <div class="bg">
-    <kefubtn />
+    <!-- <kefubtn /> -->
     <cartbtn />
     <div class="white-card top">
       <div class="search">
@@ -13,6 +13,16 @@
           </swiper-item>
         </block>
       </swiper>
+      <div class="gap" style="background:#f7f7f7;"></div>
+      <div class="white-card trotting" v-if="brodcasts.length">
+        <image class="icon" mode="widthFix" src="/static/laba.png" />
+        <div class="container">
+          <div class="broadcast">
+            <div v-for="broadcast in brodcasts" :key="broadcast.id">{{broadcast.notifyText}}</div>
+          </div>
+        </div>
+      </div>
+      <div class="gap" style="background:#f7f7f7;"></div>
       <div class="category">
         <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
           <image class="logo" :src="item.imgUrl" mode="widthFix" />
@@ -21,20 +31,12 @@
       </div>
     </div>
     <div class="gap"></div>
-    <div class="white-card trotting" v-if="brodcasts.length">
-      <image class="icon" mode="widthFix" src="/static/laba.png" />
-      <div class="container">
-        <div class="broadcast">
-          <div v-for="broadcast in brodcasts" :key="broadcast.id">{{broadcast.notifyText}}</div>
-        </div>
-      </div>
-    </div>
-    <div class="gap"></div>
     <div class="white-card ad-card">
       <image :src="firstAd" style="width:100%;vertical-align:middle" mode="widthFix" />
     </div>
     <div class="gap"></div>
-    <block v-for="item in indexProducts" :key="item.id">
+
+    <block v-for="(item,index) in indexProducts" :key="item.id">
       <div class="white-card product-card">
         <div class="header">
           <div class="hot">
@@ -53,10 +55,14 @@
         </div>
       </div>
       <div class="gap"></div>
+      <block v-if="index === 2">
+        <div class="white-card ad-card">
+          <image :src="secondAd" style="width:100%;vertical-align:middle" mode="widthFix" />
+        </div>
+        <div class="gap"></div>
+      </block>
     </block>
-    <div class="white-card ad-card">
-      <image :src="secondAd" style="width:100%;vertical-align:middle" mode="widthFix" />
-    </div>
+
     <div class="page-gap"></div>
   </div>
 </template>
@@ -64,7 +70,6 @@
 <script lang="ts">
 import Vue from "vue";
 import { mapState } from "vuex";
-import customModal from "@/components/custommodal.vue";
 import tabBar from "@/components/tabbar.vue";
 export default Vue.extend({
   data() {
@@ -92,7 +97,6 @@ export default Vue.extend({
     this.fetchBanner();
   },
   components: {
-    customModal,
     tabBar
   },
   onShareAppMessage() {
@@ -105,6 +109,12 @@ export default Vue.extend({
       this.bannerLoading = false;
     },
     goList(id) {
+      if (id === 999) {
+        uni.navigateTo({
+          url: `/pages/about`
+        });
+        return;
+      }
       uni.navigateTo({
         url: `/pages/productlist?categoryid=${id}`
       });
@@ -148,6 +158,12 @@ export default Vue.extend({
       const category = await this.$request("fetchHomePageCategories", {
         loading: true
       });
+      console.log(category);
+      // category.unshift({
+      //   imgUrl: "http://freshgo123.com/file/support.png",
+      //   name: "联系客服",
+      //   id: 999
+      // });
       this.category = category;
       this.cateLoading = false;
     },

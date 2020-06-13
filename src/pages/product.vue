@@ -35,6 +35,10 @@
       </div>
     </div>
     <div class="gap"></div>
+    <div class="white-card ad-card" v-if="ad">
+      <image :src="ad" style="width:100%;vertical-align:middle" mode="widthFix" />
+    </div>
+    <div class="gap"></div>
     <div class="white-card desc-card">
       <div class="title">产品详情</div>
       <block v-for="detail in product.description" :key="detail">
@@ -98,6 +102,7 @@ export default {
     return {
       product: false,
       current: 0,
+      ad: "",
       numToAdd: 1,
       liked: false,
       showAddCart: false,
@@ -108,12 +113,6 @@ export default {
       canvasReady: false,
       tempFilePath: ""
     };
-  },
-  onUnload(){
-    console.log('hide')
-  },
-  beforeDestroy(){
-    console.log('hide')
   },
   async onLoad(options) {
     const { id } = options;
@@ -128,6 +127,15 @@ export default {
       });
     } else {
       product = this.productList.find(item => item.id == id);
+    }
+    const ads = await this.$request("fetchAdByType", {
+      loading: true,
+      data: {
+        type: "详情页"
+      }
+    });
+    if (ads) {
+      this.ad = ads[0].imgUrl;
     }
     this.liked = product.ifUserLike;
     this.product = product;
@@ -524,7 +532,7 @@ export default {
     font-size: 24rpx;
     text-align: center;
     margin-right: 20rpx;
-    position:relative;
+    position: relative;
     .number {
       position: absolute;
       width: 26rpx;
@@ -619,5 +627,8 @@ export default {
     border-radius: 10rpx;
     font-size: 30rpx;
   }
+}
+.ad-card {
+  padding: 10rpx 20rpx;
 }
 </style>

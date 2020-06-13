@@ -55,7 +55,7 @@ export default {
         },
         {
           icon: "/static/peisongzhong.png",
-          title: "配送中"
+          title: "待配送"
         },
         {
           icon: "/static/yiwancheng.png",

@@ -2,7 +2,7 @@
   <div class="box" @click.stop>
     <div class="side" @click="minus">-</div>
     <div class="center">
-      <input type="number" @confirm="handleValChange" v-model="value" />
+      <input :disabled="true"  type="number"  v-model="value" />
     </div>
     <div class="side" @click="add">+</div>
   </div>
@@ -28,19 +28,16 @@ export default {
   },
   methods: {
     handleValChange(e) {
-      if (this.max !== null) {
-        this.value =
-          Number(e.detail.value) > Number(this.max)
-            ? Number(this.max)
-            : Number(e.detail.value);
+      let value = Number(e.detail.value.replace(/[^0-9]/ig,""));
+      if (this.max !== null || this.min !== null) {
+        if (Number(value) > Number(this.max)) {
+          value = Number(this.max);
+        } else if (Number(value) < Number(this.min)) {
+          value = this.min;
+        }
       }
-      if (this.min !== null) {
-        this.value =
-          Number(e.detail.value) < Number(this.min)
-            ? Number(this.min)
-            : Number(e.detail.value);
-      }
-      this.$emit("change", this.value, this.index);
+      this.value = Number(value);
+      this.$emit("change", value, this.index);
     },
     minus() {
       if (this.min !== null) {
@@ -78,7 +75,7 @@ export default {
     width: 60rpx;
     height: 60rpx;
     line-height: 60rpx;
-    text-align:center;
+    text-align: center;
     border: 2rpx solid #c5c5c5;
     color: #c5c5c5;
     border-radius: 10rpx;
