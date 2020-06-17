@@ -60,7 +60,12 @@
       </div>
     </custommodal>
     <div class="gap"></div>
-    <div class="white-card address" v-for="(detail,index) in deliveryDetail" :key="index">
+    <div
+      class="white-card address"
+      v-for="(detail,index) in deliveryDetail"
+      :key="index"
+      
+    >
       <div class="content">
         <div>姓名: {{detail.name}}</div>
         <div>电话: {{detail.phone}}</div>
@@ -68,9 +73,12 @@
         <div>地址: {{detail.address}}</div>
       </div>
       <div class="bot">
-        <div :class="[{'active left':detail.ifDefault},{'left':!detail.ifDefault}]">
+        <div v-if="!confirm" :class="[{'active left':detail.ifDefault},{'left':!detail.ifDefault}]">
           <div class="button" @click="setDefault(index)" />
           <div>{{detail.ifDefault?"已设为默认":"设为默认"}}</div>
+        </div>
+        <div v-else class="left">
+          <div class="btn" @click="confirmAdd(index)">使用该收货信息</div>
         </div>
         <div class="right">
           <div class="del" @click="deleteAdd(index)">删除</div>
@@ -105,8 +113,15 @@ export default {
       subName: "",
       wechat: "",
       addValid: false,
-      editing: false
+      editing: false,
+      confirm: false
     };
+  },
+  onShow() {
+    const { type } = this.$mp.query;
+    if (type === "confirm") {
+      this.confirm = true;
+    }
   },
   mounted() {
     if (this.userInfo) {
@@ -160,7 +175,27 @@ export default {
       this.edit = true;
     },
     deleteAdd(index) {
-      this.deliveryDetail.splice(index, 1);
+      uni.showModal({
+        title: "提示", //提示的标题,
+        content: "确定要删除该地址?", //提示的内容,
+        success: async res => {
+          if (res.confirm) {
+            this.deliveryDetail.splice(index, 1);
+          } else if (res.cancel) {
+            console.log("用户点击取消");
+          }
+        }
+      });
+    },
+    confirmAdd(index) {
+      const { type } = this.$mp.query;
+      if (type === "confirm") {
+        uni.navigateTo({
+          url: `/pages/billconfirm?deliveryDetail=${JSON.stringify(
+            this.deliveryDetail[index]
+          )}`
+        });
+      }
     },
     formatPhoneNumber,
     async save() {
@@ -364,6 +399,12 @@ export default {
       color: #bdbdbd;
       display: flex;
       align-items: center;
+      .btn{
+        background: #fcd81d;
+        color:black;
+        padding:10rpx 30rpx;
+        border-radius:50px;
+      }
       .button {
         width: 30rpx;
         height: 30rpx;
@@ -465,4 +506,5 @@ export default {
     background: #fcd81d;
   }
 }
+
 </style>

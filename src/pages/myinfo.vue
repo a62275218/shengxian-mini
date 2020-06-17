@@ -38,7 +38,6 @@
         <div class="input" style="width:90%;">
           <div class="title">收货地址</div>
           <textarea
-            placeholder="为了计算运费，请输入后手动选择地址或者直接获取当前地址"
             type="text"
             style="width:90%"
             :auto-height="true"

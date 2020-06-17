@@ -1,6 +1,6 @@
 <template>
   <div class="bg">
-    <!-- <kefubtn /> -->
+    <kefubtn />
     <cartbtn />
     <div class="white-card top">
       <div class="search">

@@ -172,7 +172,7 @@ export default {
       );
       if (bound) {
         itemList = itemList.filter(item => {
-          return item !== "货到付款现金支付";
+          return item !== "货到付款 定金$20";
         });
       }
       this.bound = Boolean(bound);

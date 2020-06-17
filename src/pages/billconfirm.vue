@@ -29,7 +29,7 @@
           <div
             class="get"
             @click="getVeriCode"
-            v-if="(!share && !userInfo.phone) || (userInfo && (areaCode+phone) !== userInfo.phone)"
+            v-if="(!share && !userInfo.phone) || (userInfo && (areaCode+phone) !== defaultAdd.phone)"
           >获取验证码</div>
         </div>
       </div>
@@ -43,7 +43,6 @@
         <div class="input" style="width:90%;">
           <div class="title">收货地址</div>
           <textarea
-            placeholder="为了计算运费，请输入后手动选择地址或者直接获取当前地址"
             type="text"
             style="width:90%;"
             :auto-height="true"
@@ -131,11 +130,12 @@ export default {
       shipPrice: null,
       veriPass: false,
       geoLocation: undefined,
-      share: false
+      share: false,
+      defaultAdd: undefined
     };
   },
   async onShow() {
-    const { billInfo } = this.$mp.query;
+    const { billInfo, deliveryDetail } = this.$mp.query;
     if (billInfo) {
       this.share = true;
       const bill = JSON.parse(billInfo);
@@ -146,20 +146,21 @@ export default {
       this.subName = bill.subName;
       this.shipPrice = Number(bill.shipPrice);
     } else {
-      const defaultAdd = (this.userInfo.deliveryDetail || []).find(item => {
-        return item.ifDefault;
-      });
+      const defaultAdd = deliveryDetail
+        ? JSON.parse(deliveryDetail)
+        : (this.userInfo.deliveryDetail || []).find(item => {
+            return item.ifDefault;
+          });
       if (defaultAdd) {
         this.address = defaultAdd.address;
         this.subName = defaultAdd.subName;
-        if (defaultAdd.phone) {
-          this.phone = defaultAdd.phone.substr(3);
-          this.areaCode = defaultAdd.phone.substr(0, 3);
-        }
         this.wechat = defaultAdd.wechat;
         this.name = defaultAdd.name;
         this.veriPass = Boolean(defaultAdd.phone);
         this.fetchShipFeeBySub(defaultAdd.subName);
+        this.defaultAdd = defaultAdd;
+        this.phone = defaultAdd.phone.substr(3);
+        this.areaCode = defaultAdd.phone.substr(0, 3);
       }
     }
     const rule = await this.$request("fetchRuleText", {});
@@ -206,8 +207,13 @@ export default {
   },
   watch: {
     phone(val) {
-      if (this.userInfo) {
-        this.veriPass = val === this.userInfo.phone;
+      if (this.defaultAdd) {
+        this.veriPass = this.areaCode + val === this.defaultAdd.phone;
+      }
+    },
+    areaCode(val) {
+      if (this.defaultAdd) {
+        this.veriPass = val + this.phone === this.defaultAdd.phone;
       }
     }
   },
@@ -217,7 +223,7 @@ export default {
     },
     goAddr() {
       uni.navigateTo({
-        url: "/pages/address"
+        url: "/pages/address?type=confirm"
       });
     },
     async fetchShipFeeBySub(val) {
@@ -358,7 +364,7 @@ export default {
       const veriRes = await this.$request("phoneSendVaildMessage", {
         loading: true,
         data: {
-          phone: formatPhoneNumber(this.phone)
+          phone: formatPhoneNumber(this.phone,this.areaCode)
         }
       });
       if (veriRes) {

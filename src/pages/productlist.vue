@@ -182,13 +182,6 @@ export default {
       this.filterProducts();
     },
     async filterProducts() {
-      console.log({
-        keyword: this.searchWord || "",
-        orderBy,
-        subCategoriesId: this.subCategoryId,
-        categoriesId: this.categoryId,
-        tagId: this.tagId
-      });
       const current = this.filterTab.find(item => {
         return item.status !== "";
       });
@@ -207,10 +200,11 @@ export default {
         default:
           break;
       }
+
       this.$store.dispatch("fetchProductList", {
         keyword: this.searchWord || "",
         orderBy,
-        subCategoriesId: this.subCategoryId,
+        subCategoriesId: this.subCategoryId?[this.categoryId,this.subCategoryId]:undefined,
         categoriesId: this.categoryId,
         tagId: this.tagId
       });

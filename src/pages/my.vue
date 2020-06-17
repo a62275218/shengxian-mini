@@ -69,8 +69,8 @@ export default {
       menu2: [
         {
           icon: "/static/wodexiangqing.png",
-          title: "我的详情",
-          url: "/pages/myinfo"
+          title: "我的信息",
+          url: "/pages/address"
         },
         {
           icon: "/static/liulanlishi.png",
