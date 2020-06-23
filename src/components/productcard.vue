@@ -14,7 +14,7 @@
       <div class="detail" v-if="item.detail">{{item.detail}}</div>
       <div class="product-bot">
         <div class="price">
-          <span>{{item.price}}</span>
+          <span style="font-size:30rpx;">${{item.price}}</span>
           <span>/{{item.unit}}</span>
         </div>
         <div class="num" v-if="!breakLine">

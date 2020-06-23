@@ -6,7 +6,7 @@
       <div class="search">
         <searchbar placeholder="搜索" @search="goSearchList" />
       </div>
-      <swiper style="height:380rpx">
+      <swiper style="height:380rpx" :autoplay="true">
         <block v-for="item in banners" :key="item.id">
           <swiper-item @click="goProduct(item)">
             <imagep :src="item.imgUrl" @load="(item)=>handleLoad(item)" />
@@ -111,7 +111,7 @@ export default Vue.extend({
     goList(id) {
       if (id === 999) {
         uni.navigateTo({
-          url: `/pages/about`
+          url: `/pages/productlist?sort=latest`
         });
         return;
       }
@@ -158,12 +158,11 @@ export default Vue.extend({
       const category = await this.$request("fetchHomePageCategories", {
         loading: true
       });
-      console.log(category);
-      // category.unshift({
-      //   imgUrl: "http://freshgo123.com/file/support.png",
-      //   name: "联系客服",
-      //   id: 999
-      // });
+      category.unshift({
+        imgUrl: "/static/最新ICON.png",
+        name: "最新上架",
+        id: 999
+      });
       this.category = category;
       this.cateLoading = false;
     },

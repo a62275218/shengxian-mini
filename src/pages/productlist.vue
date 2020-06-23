@@ -1,5 +1,6 @@
 <template>
   <div class="bg">
+    <kefubtn />
     <cartbtn />
     <div class="header">
       <div class="search">
@@ -23,6 +24,7 @@
           :value="multiIndex"
           :range="[categoryList,subCategoryList]"
           range-key="name"
+          @click="()=>getSubCategory(currentCategory.id)"
           @change="handleCateChange"
           @columnchange="handleColChange"
         >
@@ -95,7 +97,7 @@ export default {
   async onShow() {
     const category = await this.$request("fetchCategories", {});
     this.categoryList = category;
-    const { subid, categoryid, tagid, keyword } = this.$mp.query;
+    const { subid, categoryid, tagid, keyword, sort } = this.$mp.query;
     if (subid) {
       const subcategory = await this.$request(
         "fetchSubCategoriesByCategoriesId",
@@ -114,14 +116,21 @@ export default {
     } else {
       this.subCategoryList = [];
     }
+    if (sort) {
+      this.filterTab = [
+        { name: "销量", status: "" },
+        { name: "最新", status: "descend" },
+        { name: "价格", status: "" }
+      ];
+    }
     if (categoryid) {
       this.$set(
         this.multiIndex,
         0,
         category.findIndex(item => item.id == Number(categoryid))
       );
-    }else{
-      this.categoryList = []
+    } else {
+      this.categoryList = [];
     }
     if (tagid) {
       this.tagId = tagid;
@@ -142,6 +151,7 @@ export default {
       }
     },
     handleCateChange(e) {
+      console.log('cate',e)
       this.multiIndex = e.detail.value;
       this.filterProducts();
     },
@@ -204,7 +214,9 @@ export default {
       this.$store.dispatch("fetchProductList", {
         keyword: this.searchWord || "",
         orderBy,
-        subCategoriesId: this.subCategoryId?[this.categoryId,this.subCategoryId]:undefined,
+        subCategoriesId: this.subCategoryId
+          ? [this.categoryId, this.subCategoryId]
+          : undefined,
         categoriesId: this.categoryId,
         tagId: this.tagId
       });

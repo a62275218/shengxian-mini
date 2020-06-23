@@ -1,5 +1,5 @@
 <template>
-  <div class="cart-btn">
+  <div class="cart-btn" :style="{bottom:`${bottom}rpx`}">
     <button class="hidden-btn" open-type="contact"></button>
     <image src="/static/kefu.png" mode="widthFix" style="width:100%" />
   </div>
@@ -8,6 +8,7 @@
 <script>
 import { mapState } from "vuex";
 export default {
+  props:["bottom"],
   computed: {
     ...mapState(["cart"])
   },
@@ -31,7 +32,7 @@ export default {
   opacity: 0;
 }
 .cart-btn {
-  z-index: 100;
+  z-index: 99;
   position: fixed;
   bottom: 50rpx;
   right: 40rpx;

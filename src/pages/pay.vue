@@ -1,5 +1,6 @@
 <template>
   <div class="bg">
+    <kefubtn :bottom="132" />
     <custommodal :visible="loading">
       <div class="loading">上传中...</div>
     </custommodal>
@@ -30,12 +31,6 @@
           </div>
           <div class="row">
             <div class="input">
-              <div class="title">姓名</div>
-              {{pendingBill.phone}}
-            </div>
-          </div>
-          <div class="row">
-            <div class="input">
               <div class="title">电话</div>
               {{pendingBill.phone}}
             </div>
@@ -60,7 +55,7 @@
           </div>
         </div>
         <div class="total">
-          <div style="flex:1;"></div>
+          <div style="flex:1;">{{cutText}}</div>
           <div class="count">
             <div style="margin-right:20rpx;">共{{pendingBill.orderDetail.length}}件商品</div>
             <div>
@@ -114,7 +109,11 @@
           <div>扫描以下二维码支付</div>
           <div>请务必截图，以便上传支付凭证</div>
           <div class="paycode" @click="previewCode">
-            <image src="https://freshgo123.com/file/paymentQr.jpg" mode="widthFix" style="width:100%;" />
+            <image
+              src="https://freshgo123.com/file/paymentQr.jpg"
+              mode="widthFix"
+              style="width:100%;"
+            />
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>
@@ -163,7 +162,22 @@ export default {
     };
   },
   computed: {
-    ...mapState(["pendingBill", "userInfo", "serviceList"])
+    ...mapState(["pendingBill", "userInfo", "serviceList"]),
+    cutText() {
+      const areaInfo = this.$getIn(this.pendingBill, "areaInfo");
+      if (areaInfo && areaInfo.threshold) {
+        const { cutPrice, price, threshold,originalPrice } = areaInfo;
+        if (price == 0) {
+          return `该地区已满$${threshold}免配送费`;
+        }else if(originalPrice == price){
+          return `该地区满$${threshold}即可减$${cutPrice}`;
+        }else if(originalPrice > price){
+          return `该地区已满$${threshold}减$${cutPrice}`;
+        }
+      } else {
+        return "";
+      }
+    }
   },
   methods: {
     paymentWay(bound) {
@@ -236,7 +250,7 @@ export default {
       if (!this.enablePay) {
         return;
       }
-      
+
       const _this = this;
       this.enablePay = false;
       uni.getProvider({
@@ -315,7 +329,7 @@ export default {
               id: _this.pendingBill.orderId
             },
             success: res => {
-              _this.loading = false
+              _this.loading = false;
               if (res.statusCode === 200) {
                 uni.showModal({
                   title: "提示", //提示的标题,

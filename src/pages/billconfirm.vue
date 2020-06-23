@@ -1,5 +1,6 @@
 <template>
   <div class="bg confirm-bg">
+    <kefubtn :bottom="140" />
     <uniCalendar ref="calendar" :insert="false" @confirm="confirmDate" />
     <div class="row-card">
       <div class="row">
@@ -101,11 +102,14 @@
     <div class="page-gap"></div>
     <div class="bottom-control">
       <div class="left">
-        实付
+        <div style="min-width:64rpx;">实付</div>
         <div class="price">${{totalPrice}}</div>
-        <span style="font-size:24rpx;">{{shipText}}</span>
+        <div>
+          <span style="font-size:24rpx;">{{shipText}}</span>
+          <div style="font-size:24rpx;" v-if="cutPrice && threshold">{{cutText}}</div>
+        </div>
       </div>
-      <div class="confirm" @click="confirmPay" v-if="!share">立即支付</div>
+      <div style="min-width:120rpx;" class="confirm" @click="confirmPay" v-if="!share">立即支付</div>
     </div>
   </div>
 </template>
@@ -128,6 +132,8 @@ export default {
       areaCode: "+61",
       userComment: "",
       shipPrice: null,
+      cutPrice: null,
+      threshold: null,
       veriPass: false,
       geoLocation: undefined,
       share: false,
@@ -183,6 +189,21 @@ export default {
         ? `(包含运费:$${this.shipPrice})`
         : `请选择地址计算运费`;
     },
+    cutText() {
+      if (this.threshold) {
+        if (this.totalP >= this.threshold) {
+          if (this.shipPrice == 0) {
+            return `该地区已满$${this.threshold}免配送费`;
+          } else {
+            return `该地区已满$${this.threshold}减$${this.cutPrice}`;
+          }
+        } else {
+          return `该地区满$${this.threshold}即可减$${this.cutPrice}`;
+        }
+      } else {
+        return "";
+      }
+    },
     totalP() {
       let total = 0;
       this.cart
@@ -199,6 +220,11 @@ export default {
         .forEach(product => {
           total += Number(product.product.price) * Number(product.num);
         });
+      // if (this.threshold && this.cutPrice) {
+      //   if (total >= this.threshold) {
+      //     total -= this.cutPrice;
+      //   }
+      // }
       if (!isNaN(this.shipPrice)) {
         total += Number(this.shipPrice);
       }
@@ -235,20 +261,25 @@ export default {
             productPrice: this.totalP
           }
         });
-        if (shipRes || shipRes === 0) {
-          this.shipPrice = Number(shipRes);
+        if (shipRes) {
+          const { cutPrice, price, threshold } = shipRes;
+          this.shipPrice = price;
+          this.cutPrice = cutPrice;
+          this.threshold = threshold;
         } else {
           uni.showToast({
             title: "该地区运费需人工确认，请联系客服完成下单",
             icon: "none"
           });
           this.shipPrice = null;
+          this.cutPrice = null;
+          this.threshold = null;
         }
       }
     },
     showTip() {
       uni.showModal({
-        content: "每天七点前订单 隔日可派送 周天和大型节假日不送货"
+        content: "每天八点半点前订单 隔日可派送 周一和大型节假日不送货"
       });
     },
     async confirmDate(e) {
@@ -262,7 +293,7 @@ export default {
         this.deliveryTime = e.fulldate;
       } else {
         uni.showToast({
-          title: "该日期无法配送,7pm前下单可隔日送货,周日和特定节假日不送货",
+          title: "该日期无法配送,8:30pm前下单可隔日送货,周一和特定节假日不送货",
           icon: "none",
           duration: 6000
         });
@@ -364,7 +395,7 @@ export default {
       const veriRes = await this.$request("phoneSendVaildMessage", {
         loading: true,
         data: {
-          phone: formatPhoneNumber(this.phone,this.areaCode)
+          phone: formatPhoneNumber(this.phone, this.areaCode)
         }
       });
       if (veriRes) {
