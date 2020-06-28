@@ -42,6 +42,7 @@
             style="width:90%"
             :auto-height="true"
             v-model="address"
+            @input="disableGeo"
             @blur="searchGeoLocation"
           />
         </div>
@@ -136,6 +137,9 @@ export default {
           _this.fetchingAddr = false;
         }
       });
+    },
+    disableGeo(e){
+      this.subName = null
     },
     goAddr() {
       uni.navigateTo({

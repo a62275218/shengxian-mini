@@ -48,6 +48,7 @@
               style="width:97%"
               :auto-height="true"
               v-model="address"
+              @input="disableGeo"
               @blur="searchGeoLocation"
             />
           </div>
@@ -159,6 +160,9 @@ export default {
       this.deliveryDetail.forEach(
         (item, idx) => (item.ifDefault = index === idx)
       );
+    },
+    disableGeo(e){
+      this.subName = null
     },
     editDetail(detail, index) {
       const { name, phone, wechat, address, subName } = detail;

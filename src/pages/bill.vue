@@ -15,7 +15,7 @@
           <div>订单号: {{bill.orderId}}</div>
           <div>{{bill.status}}</div>
         </div>
-        <div class="content">
+        <div class="content" @click="goBill(bill)">
           <div class="row" v-for="item in bill.orderDetail" :key="item.id">
             <image :src="item.imgUrls[0]" style="width:100rpx" mode="widthFix" />
             <div class="title">{{item.title}}</div>
@@ -82,7 +82,6 @@ export default {
     this.defaultIndex = this.list.findIndex((item, index) => {
       return item.label === type;
     });
-    console.log(this.defaultIndex);
     this.$refs.tab.refetch();
   },
   methods: {
@@ -91,6 +90,14 @@ export default {
       uni.navigateTo({
         url: "/pages/pay"
       });
+    },
+    goBill(bill) {
+      if(bill.status === '待付款'){
+        this.goPayment(bill)
+        return
+      }
+      this.$store.commit("changePendingBill", bill);
+      uni.navigateTo({ url: `/pages/pay?mode=detail` });
     },
     cancelOrder(bill) {
       uni.showModal({
@@ -230,7 +237,7 @@ export default {
     align-items: center;
     .deliveryImg {
       color: #1d90fc;
-      margin-right:10rpx;
+      margin-right: 10rpx;
     }
     .control {
       display: flex;

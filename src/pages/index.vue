@@ -159,7 +159,7 @@ export default Vue.extend({
         loading: true
       });
       category.unshift({
-        imgUrl: "/static/最新ICON.png",
+        imgUrl: "https://freshgo123.com/file/newest.png",
         name: "最新上架",
         id: 999
       });

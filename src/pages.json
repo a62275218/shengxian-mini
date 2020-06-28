@@ -64,7 +64,7 @@
     {
       "path": "pages/pay",
       "style": {
-        "navigationBarTitleText": "支付订单"
+        "navigationBarTitleText": "订单详情"
       }
     },
     {

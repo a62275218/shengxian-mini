@@ -48,6 +48,7 @@
             style="width:90%;"
             :auto-height="true"
             v-model="address"
+            @input="disableGeo"
             @blur="searchGeoLocation"
           />
         </div>
@@ -180,8 +181,9 @@ export default {
       return this.cart.filter(item => item.active);
     },
     shipText() {
-      console.log("subName", this.subName);
-      console.log("shipPrice", this.shipPrice);
+      if(!this.subName){
+        return "该地区无效";
+      }
       if (this.subName && typeof this.shipPrice !== "number") {
         return "该地区运费需人工确认";
       }
@@ -191,6 +193,9 @@ export default {
     },
     cutText() {
       if (this.threshold) {
+        if(!this.subName){
+          return "";
+        }
         if (this.totalP >= this.threshold) {
           if (this.shipPrice == 0) {
             return `该地区已满$${this.threshold}免配送费`;
@@ -251,6 +256,9 @@ export default {
       uni.navigateTo({
         url: "/pages/address?type=confirm"
       });
+    },
+    disableGeo(e){
+      this.subName = null
     },
     async fetchShipFeeBySub(val) {
       if (val) {
@@ -418,6 +426,8 @@ export default {
         });
         return;
       }
+
+      console.log(this.subName)
 
       const _this = this;
       let errorMsg = "";

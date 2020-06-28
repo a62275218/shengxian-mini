@@ -69,7 +69,7 @@
         </div>
       </div>
       <div class="gap"></div>
-      <div class="row-card" @click="paymentWay(false)">
+      <div class="row-card" @click="paymentWay(false)" v-if="!detail">
         <div class="row">
           <div class="title">支付方式</div>
           <div style="display:flex;align-items:center">
@@ -99,7 +99,7 @@
             <div class="copy" @click="copy('063109')">点此复制</div>
           </div>
           <div class="row">
-            <div>Account: 13315633</div>
+            <div>Account: 13315625</div>
             <div class="copy" @click="copy('13315633')">点此复制</div>
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
@@ -134,7 +134,7 @@
       <div class="page-gap"></div>
       <div class="page-gap"></div>
       <div class="page-gap"></div>
-      <div class="bottom-control" v-if="payMode==='RoyalPay' || !payMode || bound">
+      <div class="bottom-control" v-if="(payMode==='RoyalPay' || !payMode || bound) && !detail">
         <div class="left">{{payMode === 'RoyalPay'?'手续费 0.88%':bound?'':'请在订单底部选择支付方式'}}</div>
         <div class="right" v-if="bound" style="align-self: center;padding-right:20rpx;">请支付20澳元定金</div>
         <div class="confirm" v-if="payMode==='RoyalPay'" @click="payBill">立即支付</div>
@@ -146,7 +146,7 @@
 <script>
 const payConfig = [
   { label: "Royalpay 微信支付", value: "RoyalPay" },
-  { label: "澳元转账 全款支付", value: "银行卡转账" },
+  { label: "澳元支付 银行转账", value: "银行卡转账" },
   { label: "RMB支付 零手续费", value: "RMB支付" },
   { label: "货到付款 定金$20", value: "货到付款" }
 ];
@@ -155,23 +155,28 @@ import { checkBill } from "@/util";
 export default {
   data() {
     return {
-      payMode: "",
+      payMode: "RoyalPay",
       enablePay: true,
       bound: false,
-      loading: false
+      loading: false,
+      detail: false
     };
+  },
+  onShow() {
+    const { mode } = this.$mp.query;
+    this.detail = Boolean(mode);
   },
   computed: {
     ...mapState(["pendingBill", "userInfo", "serviceList"]),
     cutText() {
       const areaInfo = this.$getIn(this.pendingBill, "areaInfo");
       if (areaInfo && areaInfo.threshold) {
-        const { cutPrice, price, threshold,originalPrice } = areaInfo;
+        const { cutPrice, price, threshold, originalPrice } = areaInfo;
         if (price == 0) {
           return `该地区已满$${threshold}免配送费`;
-        }else if(originalPrice == price){
+        } else if (originalPrice == price) {
           return `该地区满$${threshold}即可减$${cutPrice}`;
-        }else if(originalPrice > price){
+        } else if (originalPrice > price) {
           return `该地区已满$${threshold}减$${cutPrice}`;
         }
       } else {
