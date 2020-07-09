@@ -24,7 +24,7 @@
           :value="multiIndex"
           :range="[categoryList,subCategoryList]"
           range-key="name"
-          @click="()=>getSubCategory(currentCategory.id)"
+          @click="()=>getSubCategory(currentCategory?currentCategory.id:999)"
           @change="handleCateChange"
           @columnchange="handleColChange"
         >
@@ -35,12 +35,13 @@
           <image style="width:34rpx;" :src="judgeSortImg(item.status)" mode="widthFix" />
         </div>
       </div>
-      <div class="products" v-if="!productLoading && show">
+      <div class="products">
         <div class="product-item" v-for="item in filterProductList" :key="item.id">
           <productcard imgHeight="300rpx" :item="item" />
         </div>
       </div>
     </div>
+    <div v-if="lastPage" class="loadMore">{{judgeLoading}}</div>
     <div class="page-gap"></div>
   </div>
 </template>
@@ -58,9 +59,13 @@ export default {
       show: false,
       searchWord: "",
       tagId: "",
+      currentPage:1,
+      lastPage:undefined,
       multiIndex: [0, 0],
       categoryList: [],
-      subCategoryList: []
+      subCategoryList: [],
+      loading:false,
+      filterProductList:[]
     };
   },
   onUnload() {
@@ -76,9 +81,16 @@ export default {
     }
   },
   computed: {
-    ...mapState(["filterProductList", "productLoading"]),
+    ...mapState(["productLoading"]),
     currentCategory() {
       return this.categoryList[this.multiIndex[0]];
+    },
+    judgeLoading(){
+      if(this.loading){
+        return '加载中...'
+      }
+      console.log(this.lastPage)
+      return this.currentPage === this.lastPage?'暂无更多内容':'下拉加载更多'
     },
     currentSubCategory() {
       return this.subCategoryList[this.multiIndex[1]];
@@ -129,8 +141,12 @@ export default {
         0,
         category.findIndex(item => item.id == Number(categoryid))
       );
-    } else {
-      this.categoryList = [];
+    }else{
+      this.$set(
+        this.multiIndex,
+        0,
+        999
+      );
     }
     if (tagid) {
       this.tagId = tagid;
@@ -139,6 +155,9 @@ export default {
       this.searchWord = keyword;
     }
     this.filterProducts();
+  },
+  onReachBottom(){
+    this.filterProducts(true)
   },
   methods: {
     goDetail(id) {
@@ -151,7 +170,6 @@ export default {
       }
     },
     handleCateChange(e) {
-      console.log('cate',e)
       this.multiIndex = e.detail.value;
       this.filterProducts();
     },
@@ -167,6 +185,9 @@ export default {
       }
     },
     async getSubCategory(id) {
+      if(id === 999){
+        id = this.categoryList[0].id
+      }
       const subcategory = await this.$request(
         "fetchSubCategoriesByCategoriesId",
         {
@@ -191,7 +212,16 @@ export default {
       });
       this.filterProducts();
     },
-    async filterProducts() {
+    async filterProducts(loadingMore) {
+      if(!loadingMore){
+        this.currentPage = 1
+      }else{
+        if(this.currentPage >= this.lastPage){
+          return
+        }else{
+          this.currentPage +=1
+        }
+      }
       const current = this.filterTab.find(item => {
         return item.status !== "";
       });
@@ -210,18 +240,50 @@ export default {
         default:
           break;
       }
-
-      this.$store.dispatch("fetchProductList", {
-        keyword: this.searchWord || "",
-        orderBy,
-        subCategoriesId: this.subCategoryId
-          ? [this.categoryId, this.subCategoryId]
-          : undefined,
-        categoriesId: this.categoryId,
-        tagId: this.tagId
+      this.loading = true
+      const productRes = await this.$request("fetchProductBySth", {
+        data: {
+            keyword: this.searchWord || "",
+            orderBy,
+            subCategoriesId: this.subCategoryId
+              ? [this.categoryId, this.subCategoryId]
+              : undefined,
+            categoriesId: this.categoryId,
+            tagId: this.tagId,
+            page:this.currentPage,
+          },
+        loading: true,
       });
+      this.loading = false
+      if(productRes){
+        const {data,last_page,current_page} = productRes;
+        this.lastPage = last_page
+        this.currentPage = current_page
+        if(loadingMore){
+          this.filterProductList = this.filterProductList.concat(data)
+        }else{
+          this.filterProductList = data
+          console.log(this.filterProductList)
+        }
+      }
+      
+      // this.$store.dispatch("fetchProductList", {
+      //   keyword: this.searchWord || "",
+      //   orderBy,
+      //   subCategoriesId: this.subCategoryId
+      //     ? [this.categoryId, this.subCategoryId]
+      //     : undefined,
+      //   categoriesId: this.categoryId,
+      //   tagId: this.tagId,
+      //   page:this.currentPage,
+      //   callback:(res)=>{
+      //     const {last_page} = res;
+      //     this.lastPage = last_page
+      //   }
+      // });
     }
-  }
+  },
+  
 };
 </script>
 
@@ -264,5 +326,10 @@ export default {
       padding-right: 0;
     }
   }
+}
+.loadMore{
+  text-align:center;
+  padding-top:120rpx;
+  color:#ccc;
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="product">
     <div class="item" :style="{height}">
       <div class="lack-tag" v-if="Number(item.storageNum) <1">补货中</div>
-      <div class="tag" v-else>
+      <div class="tag" v-else-if="judgeTagContent().length">
         <image src="/static/tag.png" style="width:100%;height:100%;" />
         <div class="font">{{judgeTagContent()}}</div>
       </div>
@@ -62,7 +62,7 @@ export default {
       }
     },
     judgeTagContent() {
-      return this.item.tagName.slice(0, 2);
+      return this.item.tagName ? this.item.tagName.slice(0, 2) : "";
     },
     addCart() {
       if (this.num < this.item.storageNum) {
@@ -170,7 +170,7 @@ export default {
   align-items: center;
   margin-top: 4rpx;
   .price {
-    min-width: 40%;
+    width: 80%;
     text-align: left;
     font-size: 24rpx;
     span:nth-child(1) {
@@ -182,7 +182,7 @@ export default {
   }
 }
 .num {
-  width: 100%;
+
   display: flex;
   align-items: center;
   justify-content: flex-end;

@@ -73,7 +73,8 @@ export default {
 <style lang="scss">
 .category-wrap {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
+  height:100%;
   .navbar {
     width: 200rpx;
     min-width: 200rpx;

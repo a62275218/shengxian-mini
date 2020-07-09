@@ -22,7 +22,7 @@ const store = new Vuex.Store({
   },
   actions: {
     fetchProductList: async ({ state, commit }, payload) => {
-      const { keyword, orderBy, subCategoriesId, categoriesId } = payload;
+      const { keyword, orderBy, subCategoriesId, categoriesId,callback } = payload;
       state.productLoading = true
       const productRes = await request("fetchProductBySth", {
         data: {
@@ -34,6 +34,9 @@ const store = new Vuex.Store({
       state.productLoading = false
       if (filterProductList) {
         state.filterProductList = filterProductList;
+        if(callback){
+          callback(productRes)
+        }
       }
     },
     fetchTotalList: async ({ state }) => {
