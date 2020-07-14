@@ -233,7 +233,7 @@ export default {
       if (!isNaN(this.shipPrice)) {
         total += Number(this.shipPrice);
       }
-      return total;
+      return total.toFixed(2);
     }
   },
   watch: {
