@@ -27,7 +27,7 @@ Vue.component("tabbar", tabbar);
 Vue.component("custommodal", custommodal);
 Vue.component("numberbox", numberbox);
 Vue.component("uniCalendar", uniCalendar);
-Vue.component("cartbtn",cartbtn)
-Vue.component("kefubtn",kefubtn)
+Vue.component("cartbtn", cartbtn);
+Vue.component("kefubtn", kefubtn);
 
-new App().$mount();
+const app = new App().$mount();

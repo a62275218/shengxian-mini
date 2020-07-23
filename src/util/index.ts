@@ -1,4 +1,4 @@
-const baseUrl = "https://freshgo123.com/api/public/api/v1/";
+import store from "../store";
 
 export function formatDate(input: string | number) {
   const date = new Date(input);
@@ -60,6 +60,7 @@ export interface IRequestParam {
 }
 
 export function request(url: string, param: IRequestParam) {
+  const { state } = store;
   const { loading } = param;
   return new Promise((resolve, reject) => {
     if (loading) {
@@ -67,7 +68,7 @@ export function request(url: string, param: IRequestParam) {
     }
     try {
       uni.request({
-        url: baseUrl + url,
+        url: state.baseUrl + url,
         method: param ? param.method || "POST" : "POST",
         ...param,
         success(res) {

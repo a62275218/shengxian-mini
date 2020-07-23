@@ -94,6 +94,9 @@ export default {
       ]
     };
   },
+  onShow(){
+    this.$store.dispatch("retriveUser");
+  },
   computed: {
     ...mapState(["userInfo"])
   },

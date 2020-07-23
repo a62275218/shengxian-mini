@@ -106,8 +106,11 @@
         <div style="min-width:64rpx;">实付</div>
         <div class="price">${{totalPrice}}</div>
         <div>
-          <span style="font-size:24rpx;">{{shipText}}</span>
-          <div style="font-size:24rpx;" v-if="cutPrice && threshold">{{cutText}}</div>
+          <span style="font-size:24rpx;">{{shipText_c !== false ?shipText_c:shipText}}</span>
+          <div
+            style="font-size:24rpx;"
+            v-if="cutPrice && threshold || cutText_c !== false"
+          >{{cutText_c !== false ?cutText_c:cutText}}</div>
         </div>
       </div>
       <div style="min-width:120rpx;" class="confirm" @click="confirmPay" v-if="!share">立即支付</div>
@@ -138,7 +141,9 @@ export default {
       veriPass: false,
       geoLocation: undefined,
       share: false,
-      defaultAdd: undefined
+      defaultAdd: undefined,
+      cutText_c: false,
+      shipText_c: false,
     };
   },
   async onShow() {
@@ -152,10 +157,14 @@ export default {
       this.address = bill.address;
       this.subName = bill.subName;
       this.shipPrice = Number(bill.shipPrice);
+      this.cutText_c = bill.cutText;
+      this.shipText_c = bill.shipText;
     } else {
+      this.cutText_c = false;
+      this.shipText_c = false;
       const defaultAdd = deliveryDetail
         ? JSON.parse(deliveryDetail)
-        : (this.userInfo.deliveryDetail || []).find(item => {
+        : (this.userInfo.deliveryDetail || []).find((item) => {
             return item.ifDefault;
           });
       if (defaultAdd) {
@@ -178,10 +187,10 @@ export default {
   computed: {
     ...mapState(["cart", "userInfo"]),
     productsToBuy() {
-      return this.cart.filter(item => item.active);
+      return this.cart.filter((item) => item.active);
     },
     shipText() {
-      if(!this.subName){
+      if (!this.subName) {
         return "该地区无效";
       }
       if (this.subName && typeof this.shipPrice !== "number") {
@@ -193,7 +202,7 @@ export default {
     },
     cutText() {
       if (this.threshold) {
-        if(!this.subName){
+        if (!this.subName) {
           return "";
         }
         if (this.totalP >= this.threshold) {
@@ -212,8 +221,8 @@ export default {
     totalP() {
       let total = 0;
       this.cart
-        .filter(item => item.active)
-        .forEach(product => {
+        .filter((item) => item.active)
+        .forEach((product) => {
           total += Number(product.product.price) * Number(product.num);
         });
       return total;
@@ -221,8 +230,8 @@ export default {
     totalPrice() {
       let total = 0;
       this.cart
-        .filter(item => item.active)
-        .forEach(product => {
+        .filter((item) => item.active)
+        .forEach((product) => {
           total += Number(product.product.price) * Number(product.num);
         });
       // if (this.threshold && this.cutPrice) {
@@ -234,7 +243,7 @@ export default {
         total += Number(this.shipPrice);
       }
       return total.toFixed(2);
-    }
+    },
   },
   watch: {
     phone(val) {
@@ -246,7 +255,7 @@ export default {
       if (this.defaultAdd) {
         this.veriPass = val + this.phone === this.defaultAdd.phone;
       }
-    }
+    },
   },
   methods: {
     openCalendar() {
@@ -254,11 +263,11 @@ export default {
     },
     goAddr() {
       uni.navigateTo({
-        url: "/pages/address?type=confirm"
+        url: "/pages/address?type=confirm",
       });
     },
-    disableGeo(e){
-      this.subName = null
+    disableGeo(e) {
+      this.subName = null;
     },
     async fetchShipFeeBySub(val) {
       if (val) {
@@ -266,8 +275,8 @@ export default {
           loading: true,
           data: {
             subName: val,
-            productPrice: this.totalP
-          }
+            productPrice: this.totalP,
+          },
         });
         if (shipRes) {
           const { cutPrice, price, threshold } = shipRes;
@@ -277,7 +286,7 @@ export default {
         } else {
           uni.showToast({
             title: "该地区运费需人工确认，请联系客服完成下单",
-            icon: "none"
+            icon: "none",
           });
           this.shipPrice = null;
           this.cutPrice = null;
@@ -287,23 +296,30 @@ export default {
     },
     showTip() {
       uni.showModal({
-        content: "每天八点半点前订单 隔日可派送 周一和大型节假日不送货"
+        content: "每天八点半点前订单 隔日可派送 周一和大型节假日不送货",
       });
     },
     async confirmDate(e) {
       const result = await this.$request("checkDeliveryDateMakeOrder", {
         loading: true,
         data: {
-          deliveryDate: e.fulldate
-        }
+          deliveryDate: e.fulldate,
+        },
       });
-      if (result && result.code === 0) {
-        this.deliveryTime = e.fulldate;
+      if (result) {
+        if (result === "err2") {
+          uni.showToast({
+            title: "该日期已爆单，请更换其他配送日期",
+            icon: "none",
+          });
+        } else {
+          this.deliveryTime = e.fulldate;
+        }
       } else {
         uni.showToast({
           title: "该日期无法配送,8:30pm前下单可隔日送货,周一和特定节假日不送货",
           icon: "none",
-          duration: 6000
+          duration: 6000,
         });
       }
     },
@@ -315,11 +331,13 @@ export default {
         address: this.address,
         deliveryTime: this.deliveryTime,
         productsToBuy: this.productsToBuy,
-        shipPrice: this.shipPrice
+        shipPrice: this.shipPrice,
+        cutText: this.cutText,
+        shipText: this.shipText,
       };
       return {
         title: "订单分享",
-        path: `/pages/billconfirm?billInfo=${JSON.stringify(billInfo)}`
+        path: `/pages/billconfirm?billInfo=${JSON.stringify(billInfo)}`,
       };
     },
     async searchGeoLocation(e) {
@@ -332,26 +350,26 @@ export default {
       const geoRes = await this.$request("googleFindAddress", {
         loading: true,
         data: {
-          input: value
-        }
+          input: value,
+        },
       });
       if (!geoRes || !geoRes.length) {
         uni.showToast({
           title: "获取地理位置失败",
-          icon: "none"
+          icon: "none",
         });
         return;
       }
       uni.showActionSheet({
-        itemList: geoRes.map(item => item.address),
-        success: function(res) {
+        itemList: geoRes.map((item) => item.address),
+        success: function (res) {
           _this.address = geoRes[res.tapIndex].address;
           _this.subName = geoRes[res.tapIndex].subName;
           _this.fetchShipFeeBySub(geoRes[res.tapIndex].subName);
         },
-        fail: function(res) {
+        fail: function (res) {
           console.log(res.errMsg);
-        }
+        },
       });
     },
     showAction() {
@@ -359,26 +377,26 @@ export default {
       const options = ["+61", "+86"];
       uni.showActionSheet({
         itemList: options,
-        success: function(res) {
+        success: function (res) {
           _this.areaCode = options[res.tapIndex];
-        }
+        },
       });
     },
     getLocation() {
       const _this = this;
       uni.getLocation({
         type: "wgs84",
-        success: async function(res) {
+        success: async function (res) {
           const geoRes = await _this.$request("googleFindAddressByLatlng", {
             loading: true,
             data: {
-              latlng: `${res.latitude},${res.longitude}`
-            }
+              latlng: `${res.latitude},${res.longitude}`,
+            },
           });
           if (!geoRes) {
             uni.showToast({
               title: "获取地理位置失败",
-              icon: "none"
+              icon: "none",
             });
           } else {
             _this.address = geoRes.address;
@@ -389,9 +407,9 @@ export default {
         fail: () => {
           uni.showToast({
             title: "获取地理位置失败",
-            icon: "none"
+            icon: "none",
           });
-        }
+        },
       });
     },
     verifyCode(e) {
@@ -403,18 +421,18 @@ export default {
       const veriRes = await this.$request("phoneSendVaildMessage", {
         loading: true,
         data: {
-          phone: formatPhoneNumber(this.phone, this.areaCode)
-        }
+          phone: formatPhoneNumber(this.phone, this.areaCode),
+        },
       });
       if (veriRes) {
         uni.showToast({
-          title: "发送验证码成功"
+          title: "发送验证码成功",
         });
         this.veriMatch = String(veriRes);
       } else {
         uni.showToast({
           title: "获取验证码失败",
-          icon: "none"
+          icon: "none",
         });
       }
     },
@@ -422,12 +440,12 @@ export default {
       if (!this.userInfo) {
         uni.showToast({
           title: "请先登录",
-          icon: "none"
+          icon: "none",
         });
         return;
       }
 
-      console.log(this.subName)
+      console.log(this.subName);
 
       const _this = this;
       let errorMsg = "";
@@ -458,7 +476,7 @@ export default {
       if (errorMsg) {
         uni.showToast({
           title: errorMsg,
-          icon: "none"
+          icon: "none",
         });
         return;
       }
@@ -475,29 +493,30 @@ export default {
           price: this.totalPrice,
           userComment: this.userComment,
           deliveryDate: this.deliveryTime,
-          orderDetail: this.productsToBuy.map(item => {
+          orderDetail: this.productsToBuy.map((item) => {
             return {
               ...item.product,
-              buyNum: item.num
+              buyNum: item.num,
             };
-          })
-        }
+          }),
+        },
       });
       const bill = checkBill(billInfo);
       if (bill) {
         if (bill.orderDetail) {
           this.$store.commit(
             "batchRemoveFromCart",
-            bill.orderDetail.map(item => {
+            bill.orderDetail.map((item) => {
               return item.id;
             })
           );
         }
         this.$store.commit("changePendingBill", bill);
         uni.reLaunch({
-          url: "/pages/pay"
+          url: "/pages/pay",
         });
       }
+      this.$store.dispatch("retriveUser");
 
       // uni.showModal({
       //   title: "支付确认",
@@ -514,8 +533,8 @@ export default {
       //     }
       //   }
       // });
-    }
-  }
+    },
+  },
 };
 </script>
 

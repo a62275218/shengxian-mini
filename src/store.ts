@@ -17,13 +17,21 @@ const store = new Vuex.Store({
     historyList: [],
     serviceList: [],
     pendingBill: false,
-    productLoading:false,
+    productLoading: false,
     categoryList: [],
+    baseUrl: "https://freshgo.top/api/public/api/v1/",
+    gotUrl: false,
   },
   actions: {
     fetchProductList: async ({ state, commit }, payload) => {
-      const { keyword, orderBy, subCategoriesId, categoriesId,callback } = payload;
-      state.productLoading = true
+      const {
+        keyword,
+        orderBy,
+        subCategoriesId,
+        categoriesId,
+        callback,
+      } = payload;
+      state.productLoading = true;
       const productRes = await request("fetchProductBySth", {
         data: {
           ...payload,
@@ -31,11 +39,11 @@ const store = new Vuex.Store({
         loading: true,
       });
       const filterProductList = getIn(productRes, "data");
-      state.productLoading = false
+      state.productLoading = false;
       if (filterProductList) {
         state.filterProductList = filterProductList;
-        if(callback){
-          callback(productRes)
+        if (callback) {
+          callback(productRes);
         }
       }
     },
@@ -56,6 +64,23 @@ const store = new Vuex.Store({
       if (list) {
         state.serviceList = serviceList;
       }
+    },
+    getBaseUrl: async ({ state }) => {
+      return new Promise((resolve) => {
+        uni.request({
+          url: "https://freshgo123.com/api/public/api/v1/apiControl",
+          method: "POST",
+          success: (res) => {
+            state.baseUrl = res.data
+              ? "https://freshgo123.com/api/public/api/v1/"
+              : "https://freshgo.top/api/public/api/v1/";
+          },
+          complete: (err) => {
+            state.gotUrl = true;
+            resolve();
+          },
+        });
+      });
     },
     userLogin: async ({ state, commit }, payload) => {
       if (!payload) {
@@ -79,7 +104,7 @@ const store = new Vuex.Store({
             const openid = getIn(opendID, "openid");
             if (openid) {
               const userInfo: any = await request("registerUser", {
-                data: { username: nickName, openId: openid,imgUrl:avatarUrl },
+                data: { username: nickName, openId: openid, imgUrl: avatarUrl },
                 errorMsg: "登录失败",
                 loading: true,
               });
@@ -170,14 +195,14 @@ const store = new Vuex.Store({
         return;
       } else {
         existCart.num -= num;
-        if ((existCart.num) < 1) {
+        if (existCart.num < 1) {
           let index: number;
           state.cart.forEach((item, idx) => {
             if (item.product.id === product.id) {
               index = idx;
             }
           });
-          if (typeof(index) !== 'undefined') {
+          if (typeof index !== "undefined") {
             state.cart.splice(index, 1);
           }
         }

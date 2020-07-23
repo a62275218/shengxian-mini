@@ -83,25 +83,31 @@ export default Vue.extend({
       bannerLoading: true,
       cateLoading: true,
       productLoading: true,
-      adLoading: true
+      adLoading: true,
     };
   },
   computed: {
-    ...mapState(["userInfo"])
+    ...mapState(["userInfo", "gotUrl"]),
   },
   async onLoad() {
-    this.fetchHomePageCategories();
-    this.fetchAds();
-    this.fetchProducts();
-    this.fetchTrotting();
-    this.fetchBanner();
+    let timer = setInterval(() => {
+      if (this.gotUrl) {
+        this.fetchHomePageCategories();
+        this.fetchAds();
+        this.fetchProducts();
+        this.fetchTrotting();
+        this.fetchBanner();
+        clearInterval(timer)
+        timer = undefined
+      }
+    }, 1000);
   },
   components: {
-    tabBar
+    tabBar,
   },
   onShareAppMessage() {
     return {
-      path: "/pages/index"
+      path: "/pages/index",
     };
   },
   methods: {
@@ -111,18 +117,18 @@ export default Vue.extend({
     goList(id) {
       if (id === 999) {
         uni.navigateTo({
-          url: `/pages/productlist?sort=latest`
+          url: `/pages/productlist?sort=latest`,
         });
         return;
       }
       uni.navigateTo({
-        url: `/pages/productlist?categoryid=${id}`
+        url: `/pages/productlist?categoryid=${id}`,
       });
     },
     goSearchList(keyword) {
       if (keyword) {
         uni.navigateTo({
-          url: `/pages/productlist?keyword=${keyword}`
+          url: `/pages/productlist?keyword=${keyword}`,
         });
       }
     },
@@ -134,7 +140,7 @@ export default Vue.extend({
     },
     goTagList(id) {
       uni.navigateTo({
-        url: `/pages/productlist?tagid=${id}`
+        url: `/pages/productlist?tagid=${id}`,
       });
     },
     goProduct(payload) {
@@ -143,7 +149,7 @@ export default Vue.extend({
         uni.navigateTo({ url: `/pages/product?id=${param}` });
       } else if (type === "小程序") {
         uni.navigateToMiniProgram({
-          appId: param
+          appId: param,
         });
       }
     },
@@ -156,12 +162,12 @@ export default Vue.extend({
     async fetchHomePageCategories() {
       this.cateLoading = true;
       const category = await this.$request("fetchHomePageCategories", {
-        loading: true
+        loading: true,
       });
       category.unshift({
         imgUrl: "https://freshgo123.com/file/newest.png",
         name: "最新上架",
-        id: 999
+        id: 999,
       });
       this.category = category;
       this.cateLoading = false;
@@ -171,8 +177,8 @@ export default Vue.extend({
       const ads = await this.$request("fetchAdByType", {
         loading: true,
         data: {
-          type: "首页"
-        }
+          type: "首页",
+        },
       });
       this.adLoading = false;
       if (ads && ads.length) {
@@ -185,13 +191,13 @@ export default Vue.extend({
       const tags = await this.$request("fetchTag", { loading: true });
       this.productLoading = false;
       if (tags && tags.length) {
-        tags.forEach(item => {
+        tags.forEach((item) => {
           item.products = [];
         });
       }
       this.indexProducts = tags;
-    }
-  }
+    },
+  },
 });
 </script>
 
