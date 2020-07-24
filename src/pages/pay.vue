@@ -167,7 +167,7 @@ export default {
     this.detail = Boolean(mode);
   },
   computed: {
-    ...mapState(["pendingBill", "userInfo", "serviceList"]),
+    ...mapState(["pendingBill", "userInfo", "serviceList","baseUrl"]),
     cutText() {
       const areaInfo = this.$getIn(this.pendingBill, "areaInfo");
       if (areaInfo && areaInfo.threshold) {
@@ -327,7 +327,7 @@ export default {
           _this.loading = true;
           uni.uploadFile({
             url:
-              "https://freshgo123.com/api/public/api/v1/uploadOrderPaymentImg",
+              `${this.baseUrl}uploadOrderPaymentImg`,
             name: "file",
             filePath,
             formData: {

@@ -71,7 +71,7 @@ const store = new Vuex.Store({
           url: "https://freshgo123.com/api/public/api/v1/apiControl",
           method: "POST",
           success: (res) => {
-            state.baseUrl = res.data
+            state.baseUrl = (res as any).data.data 
               ? "https://freshgo123.com/api/public/api/v1/"
               : "https://freshgo.top/api/public/api/v1/";
           },
