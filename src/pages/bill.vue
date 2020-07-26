@@ -12,7 +12,7 @@
     <block v-for="bill in bills" :key="bill.id">
       <div class="white-card bill">
         <div class="top">
-          <div>订单号: {{bill.orderId}}</div>
+          <div>下单时间: {{formatDate(bill.createTime,true)}}</div>
           <div>{{bill.status}}</div>
         </div>
         <div class="content" @click="goBill(bill)">
@@ -59,6 +59,7 @@
 
 <script>
 import { mapState } from "vuex";
+import {formatDate} from '@/util'
 export default {
   data() {
     return {
@@ -85,6 +86,7 @@ export default {
     this.$refs.tab.refetch();
   },
   methods: {
+    formatDate,
     goPayment(bill) {
       this.$store.commit("changePendingBill", bill);
       uni.navigateTo({

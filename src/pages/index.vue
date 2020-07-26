@@ -24,6 +24,10 @@
       </div>
       <div class="gap" style="background:#f7f7f7;"></div>
       <div class="category">
+        <div class="item" @click="goList(999)">
+          <image class="logo" src="https://freshgo123.com/file/newest.png" mode="widthFix" />
+          <div>最新上架</div>
+        </div>
         <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
           <image class="logo" :src="item.imgUrl" mode="widthFix" />
           <div>{{item.name}}</div>
@@ -164,11 +168,7 @@ export default Vue.extend({
       const category = await this.$request("fetchHomePageCategories", {
         loading: true,
       });
-      category.unshift({
-        imgUrl: "https://freshgo123.com/file/newest.png",
-        name: "最新上架",
-        id: 999,
-      });
+      
       this.category = category;
       this.cateLoading = false;
     },

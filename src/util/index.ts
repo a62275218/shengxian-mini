@@ -1,14 +1,17 @@
 import store from "../store";
 
-export function formatDate(input: string | number) {
+export function formatDate(input: string | number, includeTime) {
   const date = new Date(input);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const second = date.getSeconds();
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
     2,
     "0"
-  )}`;
+  )} ${includeTime && hour + ":" + String(minute).padStart(2, "0") || ''}`;
 }
 
 export function getIn(obj: any, ...restParams: any) {

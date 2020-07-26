@@ -6,7 +6,10 @@
     </custommodal>
     <div style="width:90%;margin:0 auto;">
       <div class="white-card bill">
-        <div class="bill-title">订单信息</div>
+        <div class="bill-title">
+          <div>订单信息</div>
+          <div class="sub">下单时间: {{formatDate(pendingBill.createTime,true)}}</div>
+        </div>
         <div class="top">
           <div>订单号: {{pendingBill.orderId}}</div>
           <div>{{pendingBill.status}}</div>
@@ -87,7 +90,7 @@
           <div>请您支付定金以确认下单</div>
           <button class="button" @click="paymentWay(true)">支付定金</button>
         </block>
-        <block v-if="payMode ==='银行卡转账'">
+        <block v-if="payMode ==='澳元转账'">
           <div>请务必截图，以便上传支付凭证</div>
           <div>Commonwealth Bank</div>
           <div class="row">
@@ -146,12 +149,12 @@
 <script>
 const payConfig = [
   { label: "Royalpay 微信支付", value: "RoyalPay" },
-  { label: "澳元支付 银行转账", value: "银行卡转账" },
+  { label: "澳元支付 银行转账", value: "澳元转账" },
   { label: "RMB支付 零手续费", value: "RMB支付" },
-  { label: "货到付款 定金$20", value: "货到付款" }
+  { label: "货到付款 定金$20", value: "货到付款" },
 ];
 import { mapState } from "vuex";
-import { checkBill } from "@/util";
+import { checkBill, formatDate } from "@/util";
 export default {
   data() {
     return {
@@ -159,7 +162,7 @@ export default {
       enablePay: true,
       bound: false,
       loading: false,
-      detail: false
+      detail: false,
     };
   },
   onShow() {
@@ -167,9 +170,18 @@ export default {
     this.detail = Boolean(mode);
   },
   computed: {
-    ...mapState(["pendingBill", "userInfo", "serviceList","baseUrl"]),
+    ...mapState(["pendingBill", "userInfo", "serviceList", "baseUrl"]),
     cutText() {
       const areaInfo = this.$getIn(this.pendingBill, "areaInfo");
+      const paymentWay = this.$getIn(this.pendingBill, "paymentWay");
+      console.log(paymentWay);
+      if (paymentWay) {
+        return paymentWay === "货到付款" && this.pendingBill.status === '待配送'
+          ? `实付$20,尾款$${
+              this.pendingBill.price - 20 < 0 ? 0 : this.pendingBill.price - 20
+            }`
+          : paymentWay;
+      }
       if (areaInfo && areaInfo.threshold) {
         const { cutPrice, price, threshold, originalPrice } = areaInfo;
         if (price == 0) {
@@ -182,15 +194,16 @@ export default {
       } else {
         return "";
       }
-    }
+    },
   },
   methods: {
+    formatDate,
     paymentWay(bound) {
       let itemList = JSON.parse(
-        JSON.stringify(payConfig.map(item => item.label))
+        JSON.stringify(payConfig.map((item) => item.label))
       );
       if (bound) {
-        itemList = itemList.filter(item => {
+        itemList = itemList.filter((item) => {
           return item !== "货到付款 定金$20";
         });
       }
@@ -198,17 +211,17 @@ export default {
       const _this = this;
       uni.showActionSheet({
         itemList,
-        success: function(res) {
+        success: function (res) {
           _this.payMode = payConfig[res.tapIndex].value;
         },
-        fail: function(res) {
+        fail: function (res) {
           console.log(res.errMsg);
-        }
+        },
       });
     },
     previewCode() {
       uni.previewImage({
-        urls: ["https://freshgo123.com/file/paymentQr.jpg"]
+        urls: ["https://freshgo123.com/file/paymentQr.jpg"],
       });
     },
     updateOrder() {
@@ -216,8 +229,8 @@ export default {
         data: {
           orderId: this.pendingBill.orderId,
           paymentWay: this.bound ? "货到付款" : this.payMode,
-          status: "待配送"
-        }
+          status: "待配送",
+        },
       });
       uni.hideLoading();
     },
@@ -225,30 +238,30 @@ export default {
       uni.showModal({
         title: "提示", //提示的标题,
         content: "是否要确认下单?", //提示的内容,
-        success: async res => {
+        success: async (res) => {
           if (res.confirm) {
             const res = await this.$request("updateOrder", {
               loading: true,
               data: {
                 orderId: this.pendingBill.orderId,
                 paymentWay: this.payMode,
-                status: "待配送"
-              }
+                status: "待配送",
+              },
             });
             if (res) {
               uni.showToast({
-                title: "确认成功"
+                title: "确认成功",
               });
               setTimeout(() => {
                 uni.switchTab({
-                  url: "/pages/my"
+                  url: "/pages/my",
                 });
               }, 1000);
             }
           } else if (res.cancel) {
             console.log("用户点击取消");
           }
-        }
+        },
       });
     },
     payBill() {
@@ -260,7 +273,7 @@ export default {
       this.enablePay = false;
       uni.getProvider({
         service: "payment",
-        success: async res => {
+        success: async (res) => {
           const provider = res.provider[0];
           const royalPayRes = await _this.$request("royalpaySign", {
             loading: true,
@@ -268,8 +281,8 @@ export default {
               timeStamp: Date.now(),
               orderId: this.pendingBill.orderId,
               price: this.bound ? 20 : this.pendingBill.price,
-              openId: this.userInfo.openId
-            }
+              openId: this.userInfo.openId,
+            },
           });
           const data = checkBill(royalPayRes);
           if (data) {
@@ -282,7 +295,7 @@ export default {
               package: sdk_params.package,
               signType,
               paySign,
-              success: res => {
+              success: (res) => {
                 // _this.$store.commit(
                 //   "batchRemoveFromCart",
                 //   _this.pendingBill.orderDetail.map(item => {
@@ -293,98 +306,97 @@ export default {
                 this.enablePay = true;
                 uni.reLaunch({ url: "/pages/payresult" });
               },
-              fail: err => {
+              fail: (err) => {
                 uni.showToast({
                   title: "支付失败",
-                  icon: "none"
+                  icon: "none",
                 });
                 this.enablePay = true;
-              }
+              },
             });
           } else {
             uni.showToast({
               title: "支付失败",
-              icon: "none"
+              icon: "none",
             });
             this.enablePay = true;
           }
         },
-        fail: err => {
+        fail: (err) => {
           uni.showToast({
             title: "获取服务商失败",
-            icon: "none"
+            icon: "none",
           });
           this.enablePay = true;
-        }
+        },
       });
     },
     uploadPay() {
       const _this = this;
       uni.chooseImage({
         count: 1,
-        success: e => {
+        success: (e) => {
           const filePath = e.tempFilePaths[0];
           _this.loading = true;
           uni.uploadFile({
-            url:
-              `${this.baseUrl}uploadOrderPaymentImg`,
+            url: `${this.baseUrl}uploadOrderPaymentImg`,
             name: "file",
             filePath,
             formData: {
-              id: _this.pendingBill.orderId
+              id: _this.pendingBill.orderId,
             },
-            success: res => {
+            success: (res) => {
               _this.loading = false;
               if (res.statusCode === 200) {
                 uni.showModal({
                   title: "提示", //提示的标题,
                   content: "上传成功", //提示的内容,
                   showCancel: false,
-                  success: async res => {
+                  success: async (res) => {
                     _this.updateOrder();
                     if (res.confirm) {
                       uni.switchTab({
-                        url: "/pages/my"
+                        url: "/pages/my",
                       });
                       // this.$refs.tab.refetch();
                     } else if (res.cancel) {
                       uni.switchTab({
-                        url: "/pages/my"
+                        url: "/pages/my",
                       });
                     }
-                  }
+                  },
                 });
               } else {
                 uni.showToast({
                   title: "上传失败",
-                  icon: "none"
+                  icon: "none",
                 });
               }
             },
             fail: () => {
               uni.showToast({
                 title: "上传失败",
-                icon: "none"
+                icon: "none",
               });
               _this.loading = false;
-            }
+            },
           });
         },
         fail: () => {
           _this.loading = false;
           uni.hideLoading();
-        }
+        },
       });
     },
     copy(text) {
       uni.setClipboardData({
         data: text,
-        success: function() {
+        success: function () {
           uni.showToast({ title: "复制成功" });
-        }
+        },
       });
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -396,6 +408,11 @@ export default {
     font-size: 30rpx;
     padding: 20rpx;
     border-bottom: 2rpx solid #f3f3f3;
+    display: flex;
+    justify-content: space-between;
+    .sub {
+      font-size: 26rpx;
+    }
   }
   .top {
     color: #666666;
