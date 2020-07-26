@@ -1,6 +1,9 @@
 import store from "../store";
 
 export function formatDate(input: string | number, includeTime) {
+  if (typeof (input) == 'string' && input.indexOf('-') > -1) {
+    input = input.replace(new RegExp('-', 'g'), '/');
+  }
   const date = new Date(input);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;

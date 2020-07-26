@@ -65,7 +65,7 @@
               实付
               <span class="price">
                 <span style="font-size:24rpx;">$</span>
-                {{pendingBill.price}}
+                {{displayPrice}}
               </span>
             </div>
           </div>
@@ -174,13 +174,8 @@ export default {
     cutText() {
       const areaInfo = this.$getIn(this.pendingBill, "areaInfo");
       const paymentWay = this.$getIn(this.pendingBill, "paymentWay");
-      console.log(paymentWay);
       if (paymentWay) {
-        return paymentWay === "货到付款" && this.pendingBill.status === '待配送'
-          ? `实付$20,尾款$${
-              this.pendingBill.price - 20 < 0 ? 0 : this.pendingBill.price - 20
-            }`
-          : paymentWay;
+        return paymentWay;
       }
       if (areaInfo && areaInfo.threshold) {
         const { cutPrice, price, threshold, originalPrice } = areaInfo;
@@ -191,6 +186,18 @@ export default {
         } else if (originalPrice > price) {
           return `该地区已满$${threshold}减$${cutPrice}`;
         }
+      } else {
+        return "";
+      }
+    },
+    displayPrice() {
+      if (this.pendingBill) {
+        return this.pendingBill.paymentWay === "货到付款" &&
+          this.pendingBill.status === "待配送"
+          ? `20 (尾款$${
+              this.pendingBill.price - 20 < 0 ? 0 : (this.pendingBill.price - 20).toFixed(2)
+            })`
+          : this.pendingBill.price;
       } else {
         return "";
       }
