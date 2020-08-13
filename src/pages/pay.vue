@@ -56,6 +56,12 @@
               {{pendingBill.deliveryDate}}
             </div>
           </div>
+          <div class="row">
+            <div class="input">
+              <div class="title">运费</div>
+              {{shipPrice}}
+            </div>
+          </div>
         </div>
         <div class="total">
           <div style="flex:1;">{{cutText}}</div>
@@ -76,21 +82,24 @@
         <div class="row">
           <div class="title">支付方式</div>
           <div style="display:flex;align-items:center">
-            <div style="margin-right:20rpx;">{{bound?'货到付款':payMode}}</div>
+            <div style="margin-right:20rpx;">{{bound?'货到付款':retrivePayLabel(payMode)}}</div>
             <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
           </div>
         </div>
       </div>
       <div class="gap"></div>
-      <div class="white-card pay-desc" v-if="payMode !=='RoyalPay' && payMode || bound">
+      <div
+        class="white-card pay-desc"
+        v-if="payMode !=='RoyalPay' && payMode !=='澳元转账' && payMode || bound"
+      >
         <block v-if="bound">
-          <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?pendingBill.price-20:0}} 澳币，尾款目前只支持现金支付</div>
+          <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?(pendingBill.price-20).toFixed(2):0}} 澳币，尾款目前只支持现金支付</div>
           <div>请确保送货当天家中有人</div>
           <div>请准备好现金支付尾款</div>
           <div>请您支付定金以确认下单</div>
           <button class="button" @click="paymentWay(true)">支付定金</button>
         </block>
-        <block v-if="payMode ==='澳元转账'">
+        <!-- <block v-if="payMode ==='澳元转账'">
           <div>请务必截图，以便上传支付凭证</div>
           <div>Commonwealth Bank</div>
           <div class="row">
@@ -106,7 +115,7 @@
             <div class="copy" @click="copy('13315633')">点此复制</div>
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
-        </block>
+        </block>-->
         <block v-else-if="payMode ==='RMB支付'">
           <div>人民币支付 实时汇率 零手续费</div>
           <div>扫描以下二维码支付</div>
@@ -121,7 +130,7 @@
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>
         <block v-else-if="payMode ==='货到付款'">
-          <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?pendingBill.price-20:0}} 澳币，尾款目前只支持现金支付</div>
+          <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?(pendingBill.price-20).toFixed(2):0}} 澳币，尾款目前只支持现金支付</div>
           <div>请确保送货当天家中有人</div>
           <div>请准备好现金支付尾款</div>
           <div>请您支付定金以确认下单</div>
@@ -137,10 +146,13 @@
       <div class="page-gap"></div>
       <div class="page-gap"></div>
       <div class="page-gap"></div>
-      <div class="bottom-control" v-if="(payMode==='RoyalPay' || !payMode || bound) && !detail">
-        <div class="left">{{payMode === 'RoyalPay'?'手续费 0.88%':bound?'':'请在订单底部选择支付方式'}}</div>
+      <div
+        class="bottom-control"
+        v-if="(payMode==='RoyalPay' || payMode==='澳元转账' || !payMode || bound) && !detail"
+      >
+        <div class="left">{{payMode === 'RoyalPay'?'手续费 0.88%':''}}</div>
         <div class="right" v-if="bound" style="align-self: center;padding-right:20rpx;">请支付20澳元定金</div>
-        <div class="confirm" v-if="payMode==='RoyalPay'" @click="payBill">立即支付</div>
+        <div class="confirm" v-if="payMode==='RoyalPay' || payMode==='澳元转账'" @click="payBill">立即支付</div>
       </div>
     </div>
   </div>
@@ -148,9 +160,9 @@
 
 <script>
 const payConfig = [
-  { label: "Royalpay 微信支付", value: "RoyalPay" },
-  { label: "澳元支付 银行转账", value: "澳元转账" },
-  { label: "RMB支付 零手续费", value: "RMB支付" },
+  { label: "微信支付", value: "RoyalPay" },
+  { label: "visa/master 银行卡 ", value: "澳元转账" },
+  { label: "在线客服转账支付", value: "RMB支付" },
   { label: "货到付款 定金$20", value: "货到付款" },
 ];
 import { mapState } from "vuex";
@@ -195,9 +207,18 @@ export default {
         return this.pendingBill.paymentWay === "货到付款" &&
           this.pendingBill.status === "待配送"
           ? `20 (尾款$${
-              this.pendingBill.price - 20 < 0 ? 0 : (this.pendingBill.price - 20).toFixed(2)
+              this.pendingBill.price - 20 < 0
+                ? 0
+                : (this.pendingBill.price - 20).toFixed(2)
             })`
           : this.pendingBill.price;
+      } else {
+        return "";
+      }
+    },
+    shipPrice() {
+      if (this.pendingBill.areaInfo) {
+        return `$${this.pendingBill.areaInfo.price}`;
       } else {
         return "";
       }
@@ -205,6 +226,15 @@ export default {
   },
   methods: {
     formatDate,
+    retrivePayLabel(payMode) {
+      let label = "";
+      payConfig.forEach((item) => {
+        if (item.value === payMode) {
+          label = item.label;
+        }
+      });
+      return label;
+    },
     paymentWay(bound) {
       let itemList = JSON.parse(
         JSON.stringify(payConfig.map((item) => item.label))
@@ -282,51 +312,73 @@ export default {
         service: "payment",
         success: async (res) => {
           const provider = res.provider[0];
-          const royalPayRes = await _this.$request("royalpaySign", {
-            loading: true,
-            data: {
-              timeStamp: Date.now(),
-              orderId: this.pendingBill.orderId,
-              price: this.bound ? 20 : this.pendingBill.price,
-              openId: this.userInfo.openId,
-            },
-          });
-          const data = checkBill(royalPayRes);
-          if (data) {
-            const { sdk_params } = data;
-            const { nonceStr, signType, paySign, timeStamp } = sdk_params;
-            uni.requestPayment({
-              provider,
-              timeStamp,
-              nonceStr,
-              package: sdk_params.package,
-              signType,
-              paySign,
-              success: (res) => {
-                // _this.$store.commit(
-                //   "batchRemoveFromCart",
-                //   _this.pendingBill.orderDetail.map(item => {
-                //     return item.id;
-                //   })
-                // );
-                _this.updateOrder();
-                this.enablePay = true;
-                uni.reLaunch({ url: "/pages/payresult" });
-              },
-              fail: (err) => {
-                uni.showToast({
-                  title: "支付失败",
-                  icon: "none",
-                });
-                this.enablePay = true;
+          if (this.payMode === "RoyalPay") {
+            const royalPayRes = await _this.$request("royalpaySign", {
+              loading: true,
+              data: {
+                timeStamp: Date.now(),
+                orderId: this.pendingBill.orderId,
+                price: this.bound ? 20 : this.pendingBill.price,
+                openId: this.userInfo.openId,
               },
             });
+            const data = checkBill(royalPayRes);
+            if (data) {
+              const { sdk_params, partner_order_id, partner_code } = data;
+              const { nonceStr, signType, paySign, timeStamp } = sdk_params;
+              uni.requestPayment({
+                provider,
+                timeStamp,
+                nonceStr,
+                package: sdk_params.package,
+                signType,
+                paySign,
+                success: (res) => {
+                  _this.updateOrder();
+                  this.enablePay = true;
+                  uni.reLaunch({ url: "/pages/payresult" });
+                },
+                fail: (err) => {
+                  uni.showToast({
+                    title: "支付失败",
+                    icon: "none",
+                  });
+                  this.enablePay = true;
+                },
+              });
+            } else {
+              uni.showToast({
+                title: "支付失败",
+                icon: "none",
+              });
+              this.enablePay = true;
+            }
           } else {
-            uni.showToast({
-              title: "支付失败",
-              icon: "none",
+            const royalPayRes = await _this.$request("royalpaySignSec", {
+              loading: true,
+              data: {
+                timeStamp: Date.now(),
+                orderId: this.pendingBill.orderId,
+                price: this.bound ? 20 : this.pendingBill.price,
+                openId: this.userInfo.openId,
+              },
             });
-            this.enablePay = true;
+            const data = checkBill(royalPayRes);
+            if (data) {
+              const { pay_url } = data;
+              if (pay_url) {
+                console.log("pay_url", pay_url);
+                uni.navigateTo({
+                  url: `/pages/webview?url=${pay_url}`,
+                });
+              }
+            } else {
+              uni.showToast({
+                title: "支付失败",
+                icon: "none",
+              });
+              this.enablePay = true;
+            }
           }
         },
         fail: (err) => {

@@ -90,6 +90,12 @@
       "style": {
         "navigationBarTitleText": "管理地址"
       }
+    },
+    {
+      "path": "pages/webview",
+      "style": {
+        "navigationBarTitleText": "支付订单"
+      }
     }
   ],
   "sitemapLocation": "sitemap.json",

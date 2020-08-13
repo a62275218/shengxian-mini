@@ -101,8 +101,8 @@ export default Vue.extend({
         this.fetchProducts();
         this.fetchTrotting();
         this.fetchBanner();
-        clearInterval(timer)
-        timer = undefined
+        clearInterval(timer);
+        timer = undefined;
       }
     }, 1000);
   },
@@ -155,6 +155,8 @@ export default Vue.extend({
         uni.navigateToMiniProgram({
           appId: param,
         });
+      } else if (type === "分类") {
+        uni.navigateTo({ url: `/pages/productlist?categoryid=${param}` });
       }
     },
     async fetchBanner() {
@@ -168,7 +170,7 @@ export default Vue.extend({
       const category = await this.$request("fetchHomePageCategories", {
         loading: true,
       });
-      
+
       this.category = category;
       this.cateLoading = false;
     },
