@@ -25,7 +25,7 @@
       <div class="gap" style="background:#f7f7f7;"></div>
       <div class="category">
         <div class="item" @click="goList(999)">
-          <image class="logo" src="https://freshgo123.com/file/newest.png" mode="widthFix" />
+          <image class="logo" src="https://freshgo.top/file/newest.png" mode="widthFix" />
           <div>最新上架</div>
         </div>
         <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
@@ -278,6 +278,7 @@ export default Vue.extend({
     font-size: 26rpx;
     .logo {
       width: 100%;
+      max-height:140rpx;
       margin-bottom: 20rpx;
     }
   }

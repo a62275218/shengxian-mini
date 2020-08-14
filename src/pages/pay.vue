@@ -116,7 +116,7 @@
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>-->
-        <block v-else-if="payMode ==='RMB支付'">
+        <!-- <block v-else-if="payMode ==='RMB支付'">
           <div>人民币支付 实时汇率 零手续费</div>
           <div>扫描以下二维码支付</div>
           <div>请务必截图，以便上传支付凭证</div>
@@ -128,6 +128,11 @@
             />
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
+        </block>-->
+        <block v-else-if="payMode ==='RMB支付'">
+          <div>您可以联系客服付款</div>
+          <div>支持 微信 支付宝 银行转账</div>
+          <div>零手续费 实时汇率</div>
         </block>
         <block v-else-if="payMode ==='货到付款'">
           <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?(pendingBill.price-20).toFixed(2):0}} 澳币，尾款目前只支持现金支付</div>
@@ -135,6 +140,11 @@
           <div>请准备好现金支付尾款</div>
           <div>请您支付定金以确认下单</div>
           <button class="button" @click="paymentWay(true)">支付定金</button>
+        </block>
+        <block v-if="payMode ==='RMB支付' && bound">
+          <div>您可以联系客服付款</div>
+          <div>支持 微信 支付宝 银行转账</div>
+          <div>零手续费 实时汇率</div>
         </block>
         <button open-type="contact" class="button">联系客服</button>
         <div style="10rpx;"></div>
@@ -250,6 +260,7 @@ export default {
         itemList,
         success: function (res) {
           _this.payMode = payConfig[res.tapIndex].value;
+          console.log(payConfig[res.tapIndex].value);
         },
         fail: function (res) {
           console.log(res.errMsg);
@@ -305,7 +316,6 @@ export default {
       if (!this.enablePay) {
         return;
       }
-
       const _this = this;
       this.enablePay = false;
       uni.getProvider({
@@ -363,13 +373,16 @@ export default {
                 openId: this.userInfo.openId,
               },
             });
+            this.enablePay = true;
             const data = checkBill(royalPayRes);
             if (data) {
-              const { pay_url } = data;
+              const { pay_url, partner_order_id } = data;
               if (pay_url) {
-                console.log("pay_url", pay_url);
+                console.log("pay_url", encodeURIComponent(pay_url));
                 uni.navigateTo({
-                  url: `/pages/webview?url=${pay_url}`,
+                  url: `/pages/webview?partnerOrderId=${partner_order_id}&orderId=${
+                    this.pendingBill.orderId
+                  }&url=${encodeURIComponent(pay_url)}`,
                 });
               }
             } else {

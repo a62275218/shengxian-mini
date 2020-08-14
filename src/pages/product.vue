@@ -23,7 +23,7 @@
           <div :style="{'color':liked?'#FCD81D':'rgba(216, 216, 216, 1)'}">收藏</div>
         </div>
       </div>
-      <div class="desc-text">{{product.detail}}</div>
+      <div class="desc-text" v-if="product.detail">{{product.detail}}</div>
       <div class="storage">库存: {{product.storageNum || 0}}</div>
       <div class="bottom-info">
         <div class="price">
@@ -111,7 +111,7 @@ export default {
       qrCode: "",
       template: {},
       canvasReady: false,
-      tempFilePath: ""
+      tempFilePath: "",
     };
   },
   async onLoad(options) {
@@ -121,18 +121,23 @@ export default {
       product = await this.$request("fetchProductById", {
         data: {
           productId: id,
-          userId: this.userInfo.id
+          userId: this.userInfo.id,
         },
-        loading: true
+        loading: true,
       });
     } else {
-      product = this.productList.find(item => item.id == id);
+      product = await this.$request("fetchProductById", {
+        data: {
+          productId: id
+        },
+        loading: true,
+      });
     }
     const ads = await this.$request("fetchAdByType", {
       loading: true,
       data: {
-        type: "详情页"
-      }
+        type: "详情页",
+      },
     });
     if (ads) {
       this.ad = ads[0].imgUrl;
@@ -148,7 +153,7 @@ export default {
       if (!this.product || !this.cart) {
         return 0;
       }
-      const cartItem = this.cart.find(item => {
+      const cartItem = this.cart.find((item) => {
         return item.product.id == this.product.id;
       });
       if (!cartItem) {
@@ -163,12 +168,12 @@ export default {
         const liked = await this.$request("userLikeProduct", {
           data: {
             id: this.product.id,
-            userId: this.userInfo.id
-          }
+            userId: this.userInfo.id,
+          },
         });
         this.checkProductLike();
       }, 1000);
-    }
+    },
     // textDesc() {
     //   return this.product.description
     //     ? this.product.description
@@ -187,7 +192,7 @@ export default {
       if (this.num > 0) {
         this.$store.commit("minusCart", {
           product: this.product,
-          num: 1
+          num: 1,
         });
       }
     },
@@ -196,18 +201,18 @@ export default {
         this.$store.commit("addCart", {
           product: this.product,
           num: 1,
-          toast: false
+          toast: false,
         });
       } else {
         uni.showToast({
           title: "没有库存啦",
-          icon: "none"
+          icon: "none",
         });
       }
     },
     goCart() {
       uni.switchTab({
-        url: "/pages/cart"
+        url: "/pages/cart",
       });
     },
     showCart(storageNum, immediate) {
@@ -215,7 +220,7 @@ export default {
       if (Number(storageNum) < 1) {
         uni.showToast({
           title: "该商品没货啦",
-          icon: "none"
+          icon: "none",
         });
         return;
       }
@@ -223,7 +228,7 @@ export default {
     },
     backHome() {
       uni.switchTab({
-        url: "/pages/index"
+        url: "/pages/index",
       });
     },
     addToCart() {
@@ -233,12 +238,12 @@ export default {
       this.$store.commit("addCart", {
         product: this.product,
         num: this.numToAdd,
-        immediateToBuy: this.immediateToBuy
+        immediateToBuy: this.immediateToBuy,
       });
       this.showAddCart = false;
       if (this.immediateToBuy) {
         uni.switchTab({
-          url: "/pages/cart"
+          url: "/pages/cart",
         });
       }
     },
@@ -249,50 +254,50 @@ export default {
     saveToPhoto() {
       const _this = this;
       uni.getSetting({
-        success: res => {
+        success: (res) => {
           if (res.authSetting["scope.writePhotosAlbum"]) {
             uni.showLoading({
-              title: "保存中"
+              title: "保存中",
             });
             uni.saveImageToPhotosAlbum({
               filePath: this.tempFilePath, //图片文件路径，可以是临时文件路径也可以是永久文件路径，不支持网络图片路径,
-              success: res => {
+              success: (res) => {
                 uni.showToast({
                   title: "保存分享图成功",
-                  duration: 5000
+                  duration: 5000,
                 });
                 _this.shareCardShow = false;
               },
-              fail: err => {
+              fail: (err) => {
                 console.log(err);
                 uni.showToast({
                   title: "保存分享图失败",
-                  icon: "none"
+                  icon: "none",
                 });
               },
               complete: () => {
                 uni.hideLoading();
-              }
+              },
             });
           } else {
             uni.authorize({
               scope: "scope.writePhotosAlbum",
               success: () => {
                 _this.saveNameCard();
-              }
+              },
             });
             uni.showToast({
               title: "未获得授权",
-              icon: "none"
+              icon: "none",
             });
           }
         },
         fail: () => {
           uni.showToast({
             title: "获取授权失败",
-            icon: "none"
+            icon: "none",
           });
-        }
+        },
       });
     },
     async showShare() {
@@ -302,22 +307,22 @@ export default {
         loading: true,
         data: {
           scene: this.product.id,
-          page: ``
-        }
+          page: ``,
+        },
       });
       if (!qrCode) {
         uni.showToast({
           title: "生成失败",
-          icon: "none"
+          icon: "none",
         });
         return;
       }
       uni.showLoading();
       Promise.all([
         uni.getImageInfo({ src: qrCode }),
-        uni.getImageInfo({ src: this.product.imgUrls[0] })
+        uni.getImageInfo({ src: this.product.imgUrls[0] }),
       ])
-        .then(res => {
+        .then((res) => {
           const qr = res[0][1].path;
           const productImg = res[1][1].path;
           const ratio = res[1][1].height / res[1][1].width;
@@ -343,21 +348,21 @@ export default {
             setTimeout(() => {
               uni.canvasToTempFilePath({
                 canvasId: "poster",
-                success: e => {
+                success: (e) => {
                   this.canvasReady = true;
                   this.tempFilePath = e.tempFilePath;
                 },
                 fail: () => {
                   this.canvasReady = false;
-                }
+                },
               });
             });
           });
         })
-        .catch(err => {
+        .catch((err) => {
           uni.showToast({
             title: "生成失败",
-            icon: "none"
+            icon: "none",
           });
         });
     },
@@ -408,8 +413,8 @@ export default {
       const liked = await this.$request("checkIfUserLikeThisProduct", {
         data: {
           id: this.product.id,
-          userId: this.userInfo.id
-        }
+          userId: this.userInfo.id,
+        },
       });
       if (typeof liked === "boolean") {
         this.liked = liked;
@@ -418,14 +423,14 @@ export default {
     swiperChange(e) {
       const { current } = e.detail;
       this.current = current;
-    }
-  }
+    },
+  },
 };
 </script>
 
 <style lang="scss">
 .swiper {
-  height: 550rpx;
+  height: 640rpx;
   position: relative;
   .corner {
     position: absolute;

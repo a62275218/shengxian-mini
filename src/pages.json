@@ -68,10 +68,7 @@
       }
     },
     {
-      "path": "pages/payresult",
-      "style": {
-        "navigationBarTitleText": "支付成功"
-      }
+      "path": "pages/payresult"
     },
     {
       "path": "pages/billconfirm",

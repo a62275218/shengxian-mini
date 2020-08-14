@@ -168,7 +168,7 @@ export default {
   width: 100%;
   justify-content: space-between;
   align-items: center;
-  margin-top: 4rpx;
+  margin: 4rpx 0 10rpx;
   .price {
     width: 80%;
     text-align: left;
@@ -182,19 +182,18 @@ export default {
   }
 }
 .num {
-
   display: flex;
   align-items: center;
   justify-content: flex-end;
   .btn {
-    width: 38rpx;
-    height: 38rpx;
+    width: 44rpx;
+    height: 44rpx;
     background: rgba(255, 159, 36, 1);
     color: #fff;
     border-radius: 50%;
     text-align: center;
-    line-height: 36rpx;
-    font-size: 24rpx;
+    line-height: 44rpx;
+    font-size: 28rpx;
   }
   .number {
     margin: 0 8rpx;

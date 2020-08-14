@@ -59,7 +59,7 @@
 
 <script>
 import { mapState } from "vuex";
-import {formatDate} from '@/util'
+import { formatDate } from "@/util";
 export default {
   data() {
     return {
@@ -67,16 +67,16 @@ export default {
         { label: "待付款" },
         { label: "待配送" },
         { label: "已完成" },
-        { label: "已退款" }
+        { label: "已退款" },
       ],
       bills: [],
       defaultIndex: 0,
       currentIndex: 0,
-      loading: true
+      loading: true,
     };
   },
   computed: {
-    ...mapState(["userInfo"])
+    ...mapState(["userInfo"]),
   },
   onShow() {
     const { type } = this.$mp.query;
@@ -90,13 +90,13 @@ export default {
     goPayment(bill) {
       this.$store.commit("changePendingBill", bill);
       uni.navigateTo({
-        url: "/pages/pay"
+        url: "/pages/pay",
       });
     },
     goBill(bill) {
-      if(bill.status === '待付款'){
-        this.goPayment(bill)
-        return
+      if (bill.status === "待付款") {
+        this.goPayment(bill);
+        return;
       }
       this.$store.commit("changePendingBill", bill);
       uni.navigateTo({ url: `/pages/pay?mode=detail` });
@@ -105,50 +105,50 @@ export default {
       uni.showModal({
         title: "提示", //提示的标题,
         content: "确认要取消该订单吗?", //提示的内容,
-        success: async res => {
+        success: async (res) => {
           if (res.confirm) {
             const res = await this.$request("updateOrder", {
               loading: true,
               data: {
                 orderId: bill.orderId,
-                status: "已取消"
-              }
+                status: "已取消",
+              },
             });
             if (res) {
               uni.showToast({
-                title: "取消订单成功"
+                title: "取消订单成功",
               });
             }
             this.$refs.tab.refetch();
           } else if (res.cancel) {
             console.log("用户点击取消");
           }
-        }
+        },
       });
     },
     confirmBill(bill) {
       uni.showModal({
         title: "提示", //提示的标题,
         content: "是否要确认收货?", //提示的内容,
-        success: async res => {
+        success: async (res) => {
           if (res.confirm) {
             const res = await this.$request("updateOrder", {
               loading: true,
               data: {
                 orderId: bill.orderId,
-                status: "已完成"
-              }
+                status: "已完成",
+              },
             });
             if (res) {
               uni.showToast({
-                title: "确认收货成功"
+                title: "确认收货成功",
               });
             }
             this.$refs.tab.refetch();
           } else if (res.cancel) {
             console.log("用户点击取消");
           }
-        }
+        },
       });
     },
     async getBillList(index) {
@@ -159,31 +159,33 @@ export default {
         loading: true,
         data: {
           id: this.userInfo.id,
-          status: label
-        }
+          status: label,
+        },
       });
       this.loading = false;
-      billRes.forEach(bill => {
-        let total = 0;
-        bill.orderDetail.forEach(order => {
-          total += Number(order.price);
+      if (billRes) {
+        billRes.forEach((bill) => {
+          let total = 0;
+          bill.orderDetail.forEach((order) => {
+            total += Number(order.price);
+          });
+          bill.totalPrice = total;
         });
-        bill.totalPrice = total;
-      });
-      this.bills = billRes;
+        this.bills = billRes;
+      }
     },
     preview(src) {
       if (!src) {
         uni.showToast({
           title: "暂无送货图片", //提示的内容,
-          icon: "none" //图标,
+          icon: "none", //图标,
         });
       }
       uni.previewImage({
-        urls: [src] //需要预览的图片链接列表,
+        urls: [src], //需要预览的图片链接列表,
       });
-    }
-  }
+    },
+  },
 };
 </script>
 

@@ -13,7 +13,6 @@ export default Vue.extend({
   onShow() {
     this.$store.dispatch("getBaseUrl").then(() => {
       this.$store.dispatch("retriveUser");
-      this.$store.dispatch("fetchTotalList");
       this.$store.dispatch("fetchServiceList");
       this.$store.commit("retriveCart");
       this.$store.commit("retriveHistory");
