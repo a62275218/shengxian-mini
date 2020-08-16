@@ -61,16 +61,11 @@
       </div>
     </custommodal>
     <div class="gap"></div>
-    <div
-      class="white-card address"
-      v-for="(detail,index) in deliveryDetail"
-      :key="index"
-      
-    >
+    <div class="white-card address" v-for="(detail,index) in deliveryDetail" :key="index">
       <div class="content">
         <div>姓名: {{detail.name}}</div>
         <div>电话: {{detail.phone}}</div>
-        <div>微信: {{detail.wechat}}</div>
+        <div>微信: {{detail.wechat || ''}}</div>
         <div>地址: {{detail.address}}</div>
       </div>
       <div class="bot">
@@ -99,7 +94,7 @@ import { mapState } from "vuex";
 import { formatPhoneNumber } from "@/util";
 export default {
   computed: {
-    ...mapState(["userInfo"])
+    ...mapState(["userInfo"]),
   },
   data() {
     return {
@@ -115,7 +110,7 @@ export default {
       wechat: "",
       addValid: false,
       editing: false,
-      confirm: false
+      confirm: false,
     };
   },
   onShow() {
@@ -141,19 +136,13 @@ export default {
         this.veriPass =
           val + this.phone === this.deliveryDetail[this.editing].phone;
       }
-    }
+    },
   },
-  async onUnload() {
-    const newUser = await this.$request("updateUserDetailById", {
-      loading: true,
-      data: {
-        id: this.userInfo.id,
-        deliveryDetail: this.deliveryDetail
-      }
-    });
-    if (newUser) {
-      this.$store.commit("updateUser", newUser);
-    }
+  onHide() {
+    this.setUserAddress();
+  },
+  onUnload() {
+    this.setUserAddress();
   },
   methods: {
     setDefault(index) {
@@ -161,8 +150,21 @@ export default {
         (item, idx) => (item.ifDefault = index === idx)
       );
     },
-    disableGeo(e){
-      this.subName = null
+    async setUserAddress() {
+      console.log("set");
+      const newUser = await this.$request("updateUserDetailById", {
+        loading: true,
+        data: {
+          id: this.userInfo.id,
+          deliveryDetail: this.deliveryDetail,
+        },
+      });
+      if (newUser) {
+        this.$store.commit("updateUser", newUser);
+      }
+    },
+    disableGeo(e) {
+      this.subName = null;
     },
     editDetail(detail, index) {
       const { name, phone, wechat, address, subName } = detail;
@@ -182,13 +184,13 @@ export default {
       uni.showModal({
         title: "提示", //提示的标题,
         content: "确定要删除该地址?", //提示的内容,
-        success: async res => {
+        success: async (res) => {
           if (res.confirm) {
             this.deliveryDetail.splice(index, 1);
           } else if (res.cancel) {
             console.log("用户点击取消");
           }
-        }
+        },
       });
     },
     confirmAdd(index) {
@@ -197,7 +199,7 @@ export default {
         uni.navigateTo({
           url: `/pages/billconfirm?deliveryDetail=${JSON.stringify(
             this.deliveryDetail[index]
-          )}`
+          )}`,
         });
       }
     },
@@ -209,9 +211,6 @@ export default {
       }
       if (!this.name) {
         errMsg = "请输入姓名";
-      }
-      if (!this.wechat) {
-        errMsg = "请输入微信号";
       }
       if (!this.address) {
         errMsg = "请选择有效地址";
@@ -227,7 +226,7 @@ export default {
       if (errMsg) {
         uni.showToast({
           title: errMsg,
-          icon: "none"
+          icon: "none",
         });
         return;
       }
@@ -237,15 +236,15 @@ export default {
           name: this.name,
           address: this.address,
           subName: this.subName,
-          wechat: this.wechat,
-          phone: this.areaCode + this.phone
+          wechat: this.wechat || '',
+          phone: this.areaCode + this.phone,
         });
       } else {
         const detail = this.deliveryDetail[this.editing];
         detail.name = this.name;
         detail.address = this.address;
         detail.subName = this.subName;
-        detail.wechat = this.wechat;
+        detail.wechat = this.wechat || '';
         detail.phone = this.areaCode + this.phone;
       }
       this.edit = false;
@@ -261,13 +260,13 @@ export default {
       const geoRes = await this.$request("googleFindAddress", {
         loading: true,
         data: {
-          input: value
-        }
+          input: value,
+        },
       });
       if (!geoRes || !geoRes.length) {
         uni.showToast({
           title: "获取地理位置失败",
-          icon: "none"
+          icon: "none",
         });
         _this.address = this.userInfo.address;
         _this.addValid = false;
@@ -275,16 +274,16 @@ export default {
         return;
       }
       uni.showActionSheet({
-        itemList: geoRes.map(item => item.address),
-        success: function(res) {
+        itemList: geoRes.map((item) => item.address),
+        success: function (res) {
           _this.address = geoRes[res.tapIndex].address;
           _this.subName = geoRes[res.tapIndex].subName;
           _this.addValid = true;
           _this.fetchingAddr = false;
         },
-        fail: function(res) {
+        fail: function (res) {
           _this.fetchingAddr = false;
-        }
+        },
       });
     },
     unsave() {
@@ -301,9 +300,9 @@ export default {
       const options = ["+61", "+86"];
       uni.showActionSheet({
         itemList: options,
-        success: function(res) {
+        success: function (res) {
           _this.areaCode = options[res.tapIndex];
-        }
+        },
       });
     },
     addNew() {
@@ -319,17 +318,17 @@ export default {
       _this.fetchingAddr = true;
       uni.getLocation({
         type: "wgs84",
-        success: async function(res) {
+        success: async function (res) {
           const geoRes = await _this.$request("googleFindAddressByLatlng", {
             loading: true,
             data: {
-              latlng: `${res.latitude},${res.longitude}`
-            }
+              latlng: `${res.latitude},${res.longitude}`,
+            },
           });
           if (!geoRes) {
             uni.showToast({
               title: "获取地理位置失败",
-              icon: "none"
+              icon: "none",
             });
             _this.address = this.userInfo.address;
             _this.addValid = false;
@@ -342,30 +341,30 @@ export default {
         fail: () => {
           uni.showToast({
             title: "获取地理位置失败",
-            icon: "none"
+            icon: "none",
           });
           _this.address = this.userInfo.address;
           _this.addValid = false;
           _this.fetchingAddr = false;
-        }
+        },
       });
     },
     async getVeriCode() {
       const veriRes = await this.$request("phoneSendVaildMessage", {
         loading: true,
         data: {
-          phone: formatPhoneNumber(this.phone, this.areaCode)
-        }
+          phone: formatPhoneNumber(this.phone, this.areaCode),
+        },
       });
       if (veriRes) {
         uni.showToast({
-          title: "发送验证码成功"
+          title: "发送验证码成功",
         });
         this.veriMatch = String(veriRes);
       } else {
         uni.showToast({
           title: "获取验证码失败",
-          icon: "none"
+          icon: "none",
         });
       }
     },
@@ -373,8 +372,8 @@ export default {
       if (this.veriMatch) {
         this.veriPass = e.detail.value === this.veriMatch;
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -403,11 +402,11 @@ export default {
       color: #bdbdbd;
       display: flex;
       align-items: center;
-      .btn{
+      .btn {
         background: #fcd81d;
-        color:black;
-        padding:10rpx 30rpx;
-        border-radius:50px;
+        color: black;
+        padding: 10rpx 30rpx;
+        border-radius: 50px;
       }
       .button {
         width: 30rpx;
@@ -510,5 +509,4 @@ export default {
     background: #fcd81d;
   }
 }
-
 </style>

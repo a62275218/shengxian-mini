@@ -129,10 +129,10 @@
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>-->
-        <block v-else-if="payMode ==='RMB支付'">
-          <div>您可以联系客服付款</div>
-          <div>支持 微信 支付宝 银行转账</div>
-          <div>零手续费 实时汇率</div>
+        <block v-else-if="payMode ==='RMB支付'" >
+          <div class="large-text">您可以联系客服付款</div>
+          <div class="large-text">支持 微信 支付宝 银行转账</div>
+          <div class="large-text">零手续费 实时汇率</div>
         </block>
         <block v-else-if="payMode ==='货到付款'">
           <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?(pendingBill.price-20).toFixed(2):0}} 澳币，尾款目前只支持现金支付</div>
@@ -147,6 +147,7 @@
           <div>零手续费 实时汇率</div>
         </block>
         <button open-type="contact" class="button">联系客服</button>
+        <button class="button" @click="uploadPay">上传支付凭证</button>
         <div style="10rpx;"></div>
         <div class="row" v-for="(item,index) in serviceList" :key="item.id">
           <div>客服微信{{index+1}}: {{item.wxId}}</div>
@@ -173,7 +174,7 @@ const payConfig = [
   { label: "微信支付", value: "RoyalPay" },
   { label: "visa/master 银行卡 ", value: "澳元转账" },
   { label: "在线客服转账支付", value: "RMB支付" },
-  { label: "货到付款 定金$20", value: "货到付款" },
+  // { label: "货到付款 定金$20", value: "货到付款" },
 ];
 import { mapState } from "vuex";
 import { checkBill, formatDate } from "@/util";
@@ -473,6 +474,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.large-text{
+  font-size:30rpx;
+}
 .bill {
   border-radius: 14rpx;
   font-size: 26rpx;

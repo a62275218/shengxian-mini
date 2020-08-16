@@ -39,8 +39,8 @@ export default {
           uni.reLaunch({ url: "/pages/payresult" });
           this.$request("updateOrder", {
             data: {
-              orderId: this.pendingBill.orderId,
-              paymentWay: this.bound ? "货到付款" : "澳元转账",
+              orderId: orderId,
+              paymentWay: "澳元转账",
               status: "待配送",
             },
           });

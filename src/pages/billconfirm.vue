@@ -52,11 +52,11 @@
             @blur="searchGeoLocation"
           />
         </div>
-        <div @click="goAddr" class="getGeo">更换地址</div>
+        <div @click="goAddr" class="getGeo" v-if="showChangeAddress">更换地址</div>
       </div>
       <div class="row" @click="openCalendar">
         <div class="input">
-          <div class="title">送货时间</div>
+          <div class="title">送货日期</div>
           <image
             @click.stop="showTip"
             src="/static/shiptime.png"
@@ -78,12 +78,12 @@
     </div>
     <div class="gap"></div>
     <div class="row-card">
-      <div class="row" v-for="item in productsToBuy" :key="item.product.id">
+      <div class="row" v-for="item in share?shareProducts:productsToBuy" :key="item.product.id">
         <div class="product">
           <image
             :src="item.product.imgUrls[0]"
             mode="widthFix"
-            style="width:140rpx;border-radius:20rpx;"
+            style="width:140rpx;border-radius:20rpx;max-height:200rpx;"
           />
           <div style="margin-left:20rpx;">{{item.product.title}}</div>
         </div>
@@ -94,17 +94,21 @@
       </div>
     </div>
     <div class="gap"></div>
-    <button class="share" open-type="share" v-if="!share">转发订单信息给客服</button>
+
     <div class="gap"></div>
     <div class="must-know">
-      <div class="title">购买须知</div>
+      <div class="title">亲爱的顾客请您看一下购买须知</div>
       <text style="line-height:1.5;">{{ruleText}}</text>
     </div>
+    <div class="gap"></div>
+    <button class="share" open-type="share" v-if="!share">转发订单</button>
+    <div class="gap"></div>
+    <div class="gap"></div>
     <div class="page-gap"></div>
     <div class="bottom-control">
       <div class="left">
         <div style="min-width:64rpx;">实付</div>
-        <div class="price">${{totalPrice}}</div>
+        <div class="price">${{share?shareTotalPrice:totalPrice}}</div>
         <div>
           <span style="font-size:24rpx;">{{shipText_c !== false ?shipText_c:shipText}}</span>
           <div
@@ -136,6 +140,8 @@ export default {
       areaCode: "+61",
       userComment: "",
       shipPrice: null,
+      shareProducts: [],
+      shareTotalPrice:'',
       cutPrice: null,
       threshold: null,
       veriPass: false,
@@ -150,15 +156,17 @@ export default {
     const { billInfo, deliveryDetail } = this.$mp.query;
     if (billInfo) {
       this.share = true;
-      const bill = JSON.parse(billInfo);
+      const bill = JSON.parse(decodeURIComponent(billInfo));
       this.name = bill.name;
       this.phone = bill.phone;
-      this.wechat = bill.wechat;
+      this.wechat = bill.wechat || "";
       this.address = bill.address;
       this.subName = bill.subName;
       this.shipPrice = Number(bill.shipPrice);
       this.cutText_c = bill.cutText;
       this.shipText_c = bill.shipText;
+      this.shareTotalPrice = bill.totalPrice;
+      this.shareProducts = bill.productsToBuy;
     } else {
       this.cutText_c = false;
       this.shipText_c = false;
@@ -170,7 +178,7 @@ export default {
       if (defaultAdd) {
         this.address = defaultAdd.address;
         this.subName = defaultAdd.subName;
-        this.wechat = defaultAdd.wechat;
+        this.wechat = defaultAdd.wechat || "";
         this.name = defaultAdd.name;
         this.veriPass = Boolean(defaultAdd.phone);
         this.fetchShipFeeBySub(defaultAdd.subName);
@@ -188,6 +196,9 @@ export default {
     ...mapState(["cart", "userInfo"]),
     productsToBuy() {
       return this.cart.filter((item) => item.active);
+    },
+    showChangeAddress() {
+      return this.$getIn(this.userInfo, "deliveryDetail", "length") > 0;
     },
     shipText() {
       if (!this.subName) {
@@ -317,7 +328,7 @@ export default {
         }
       } else {
         uni.showToast({
-          title: "该日期无法配送,8:30pm前下单可隔日送货,周一和特定节假日不送货",
+          title: "该日期无法配送,8:00pm前下单可隔日送货,周一和特定节假日不送货",
           icon: "none",
           duration: 6000,
         });
@@ -332,12 +343,16 @@ export default {
         deliveryTime: this.deliveryTime,
         productsToBuy: this.productsToBuy,
         shipPrice: this.shipPrice,
+        totalPrice: this.totalPrice,
         cutText: this.cutText,
         shipText: this.shipText,
       };
+
       return {
         title: "订单分享",
-        path: `/pages/billconfirm?billInfo=${JSON.stringify(billInfo)}`,
+        path: `/pages/billconfirm?billInfo=${encodeURIComponent(
+          JSON.stringify(billInfo)
+        )}`,
       };
     },
     async searchGeoLocation(e) {
@@ -455,14 +470,11 @@ export default {
       if (!this.phone) {
         errorMsg = "请输入电话";
       }
-      if (!this.wechat) {
-        errorMsg = "请输入微信号";
-      }
       if (!this.address) {
         errorMsg = "请选择地址";
       }
       if (!this.deliveryTime) {
-        errorMsg = "请选择送货时间";
+        errorMsg = "请选择送货日期";
       }
       if (!this.veriPass) {
         errorMsg = "请输入正确的手机验证码";
@@ -578,6 +590,7 @@ export default {
     font-size: 26rpx;
     background: #fff;
     border-radius: 20rpx;
+    line-height: 2;
     padding: 30rpx;
     .title {
       margin-bottom: 20rpx;

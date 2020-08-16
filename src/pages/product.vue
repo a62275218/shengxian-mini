@@ -31,7 +31,7 @@
           <span>{{product.price}}</span>
           <span class="unit">/{{product.unit}}</span>
         </div>
-        <div class="sell">月销量: {{product.soldNum}}</div>
+        <div class="sell">销量: {{product.soldNum}}</div>
       </div>
     </div>
     <div class="gap"></div>
