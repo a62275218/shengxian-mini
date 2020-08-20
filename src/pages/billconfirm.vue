@@ -660,14 +660,17 @@ export default {
   background: #fff;
   border-radius: 20rpx;
   font-size: 28rpx;
-  z-index: 9999999;
+  z-index: 99;
+  border: 2rpx solid #f0f0f0;
   div {
-    padding: 6rpx 20rpx;
+    padding: 8rpx 20rpx;
+    border-bottom: 2rpx solid #f0f0f0;
   }
   .button {
     margin: 10rpx auto;
     width: 200rpx;
     background: #fcd81d;
+    
     border-radius: 100rpx;
     font-size: 30rpx;
     text-align: center;

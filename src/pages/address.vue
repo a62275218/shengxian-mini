@@ -519,8 +519,10 @@ export default {
   background: #fff;
   border-radius: 20rpx;
   font-size: 28rpx;
+  border: 2rpx solid #f0f0f0;
   div {
     padding: 6rpx 20rpx;
+    border-bottom: 2rpx solid #f0f0f0;
   }
   .button {
     margin: 10rpx auto;
