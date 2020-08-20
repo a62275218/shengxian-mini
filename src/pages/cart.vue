@@ -27,7 +27,7 @@
               <div class="price">${{item.product.price}}</div>
               <div style="width:200rpx">
                 <numberbox
-                  :min="1"
+                  :min="0"
                   :max="item.product.storageNum"
                   :initialVal="item.num"
                   :index="index"

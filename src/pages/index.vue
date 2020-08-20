@@ -26,7 +26,7 @@
       <div class="category">
         <div class="item" @click="goList(999)">
           <image class="logo" src="https://freshgo.top/file/newest.png" mode="widthFix" />
-          <div>最新上架</div>
+          <div>全部商品</div>
         </div>
         <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
           <image class="logo" :src="item.imgUrl" mode="widthFix" />
@@ -139,6 +139,7 @@ export default Vue.extend({
     async fetchTrotting() {
       this.brodcastLoading = true;
       const brodcasts = await this.$request("fetchNotification", {});
+      console.log('brodcasts',brodcasts)
       this.brodcasts = brodcasts;
       this.brodcastLoading = false;
     },
@@ -219,10 +220,10 @@ export default Vue.extend({
 
 @keyframes horizontal {
   0% {
-    left: 100%;
+    transform:translate3d(0,0,0);
   }
   100% {
-    left: -200%;
+    transform:translate3d(-100%,0,0);
   }
 }
 
@@ -242,13 +243,15 @@ export default Vue.extend({
       color: #666666;
       white-space: nowrap;
       height: 100%;
-      position: absolute;
-      left: 100%;
+      position: relative;
+      transform:translate3d(0,0,0);
+      margin-left:100%;
       top: 0;
       display: flex;
       font-size: 24rpx;
       align-items: center;
-      animation: horizontal 30s linear infinite;
+      width:fit-content;
+      animation: horizontal 300s linear infinite;
       & div {
         padding-right: 80rpx;
         &:nth-last-child(1) {
@@ -272,14 +275,14 @@ export default Vue.extend({
     align-items: center;
     flex-direction: column;
     justify-content: space-between;
-    padding: 30rpx 40rpx 0;
+    padding: 30rpx 20rpx 0;
     box-sizing: border-box;
-    width: 25%;
+    width: 20%;
     font-size: 26rpx;
     .logo {
       width: 100%;
       max-height:140rpx;
-      margin-bottom: 20rpx;
+      margin-bottom: 10rpx;
     }
   }
 }

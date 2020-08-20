@@ -1,6 +1,6 @@
 <template>
-  <div class="cart-btn" :style="{bottom:`${bottom}rpx`}">
-    <button class="hidden-btn" open-type="contact"></button>
+  <div class="cart-btn" :style="{bottom:`${bottom}rpx`}" @click="goAbout">
+    <!-- <button class="hidden-btn" open-type="contact"></button> -->
     <image src="/static/kefu.png" mode="widthFix" style="width:100%" />
   </div>
 </template>
@@ -13,6 +13,11 @@ export default {
     ...mapState(["cart"])
   },
   methods: {
+    goAbout(){
+      uni.navigateTo({
+        url: "/pages/about"
+      });
+    },
     goCart() {
       uni.switchTab({
         url: "/pages/cart"

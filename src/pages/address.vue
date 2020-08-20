@@ -21,17 +21,18 @@
                 />
               </div>
             </div>
-            <input style="font-size:24rpx;" type="text" v-model="phone" />
+            <input style="font-size:24rpx;" placeholder="手机号码" type="text" v-model="phone" />
           </div>
-          <div class="veriCode">
+          <!-- <div class="veriCode">
             <input
               :class="{'pass':veriPass,'fail':!veriPass}"
               type="number"
               v-model="veriCode"
               @input="verifyCode"
+              placeholder="验证码"
             />
             <div class="get" @click="getVeriCode">获取验证码</div>
-          </div>
+          </div>-->
         </div>
         <div class="row">
           <div class="input">
@@ -39,20 +40,25 @@
             <input type="text" v-model="wechat" />
           </div>
         </div>
-        <div class="row">
+        <div class="row" style="position:relative;">
           <div class="input" style="width:90%;">
             <div class="title">收货地址</div>
             <textarea
-              placeholder-style="font-size:12rpx;"
               type="text"
               style="width:97%"
               :auto-height="true"
+              placeholder="不要填门牌号"
               v-model="address"
-              @input="disableGeo"
-              @blur="searchGeoLocation"
+              @input="debounceSearchGeoLocation"
             />
           </div>
           <div @click="getLocation" class="getGeo">获取地址</div>
+          <div v-if="pendingAddress.length > 0" class="address-list">
+            <div v-for="item in pendingAddress" :key="item.address" @click="selectAddr(item)">
+              <span>{{item.address}}</span>
+            </div>
+            <div class="button" @click="cancelAddr">取消</div>
+          </div>
         </div>
         <div class="bott">
           <div class="btnb cancel" @click="()=>this.edit = false">取消</div>
@@ -91,7 +97,7 @@
 
 <script>
 import { mapState } from "vuex";
-import { formatPhoneNumber } from "@/util";
+import { formatPhoneNumber, debounce } from "@/util";
 export default {
   computed: {
     ...mapState(["userInfo"]),
@@ -99,6 +105,7 @@ export default {
   data() {
     return {
       deliveryDetail: [],
+      pendingAddress: [],
       edit: false,
       name: "",
       veriPass: false,
@@ -123,6 +130,7 @@ export default {
     if (this.userInfo) {
       this.deliveryDetail = this.userInfo.deliveryDetail || [];
     }
+    this.debounceSearchGeoLocation = debounce(this.searchGeoLocation, 200);
   },
   watch: {
     phone(val) {
@@ -220,9 +228,9 @@ export default {
           errMsg = "请选择有效地址";
         }
       }
-      if (this.phone !== this.userInfo.phone && !this.veriPass) {
-        errMsg = "请输入有效的验证码";
-      }
+      // if (this.phone !== this.userInfo.phone && !this.veriPass) {
+      //   errMsg = "请输入有效的验证码";
+      // }
       if (errMsg) {
         uni.showToast({
           title: errMsg,
@@ -236,7 +244,7 @@ export default {
           name: this.name,
           address: this.address,
           subName: this.subName,
-          wechat: this.wechat || '',
+          wechat: this.wechat || "",
           phone: this.areaCode + this.phone,
         });
       } else {
@@ -244,48 +252,58 @@ export default {
         detail.name = this.name;
         detail.address = this.address;
         detail.subName = this.subName;
-        detail.wechat = this.wechat || '';
+        detail.wechat = this.wechat || "";
         detail.phone = this.areaCode + this.phone;
       }
       this.edit = false;
     },
     async searchGeoLocation(e) {
-      const _this = this;
+      console.log("debounced");
       const { value } = e.detail;
+      this.subName = "";
       if (!value) {
-        this.subName = "";
         return;
       }
-      _this.fetchingAddr = true;
       const geoRes = await this.$request("googleFindAddress", {
-        loading: true,
         data: {
           input: value,
         },
       });
-      if (!geoRes || !geoRes.length) {
+      if (!geoRes) {
         uni.showToast({
           title: "获取地理位置失败",
           icon: "none",
         });
-        _this.address = this.userInfo.address;
-        _this.addValid = false;
-        _this.fetchingAddr = false;
         return;
       }
-      uni.showActionSheet({
-        itemList: geoRes.map((item) => item.address),
-        success: function (res) {
-          _this.address = geoRes[res.tapIndex].address;
-          _this.subName = geoRes[res.tapIndex].subName;
-          _this.addValid = true;
-          _this.fetchingAddr = false;
-        },
-        fail: function (res) {
-          _this.fetchingAddr = false;
-        },
-      });
+      this.pendingAddress = geoRes;
+      console.log(geoRes);
     },
+    cancelAddr() {
+      this.address = "";
+      this.subName = "";
+      this.pendingAddress = [];
+    },
+    selectAddr(selection) {
+      const { address, subName } = selection;
+      this.address = address;
+      this.subName = subName;
+      this.addValid = true;
+      this.fetchingAddr = false;
+      this.pendingAddress = [];
+    },
+    // uni.showActionSheet({
+    //   itemList: geoRes.map((item) => item.address),
+    //   success: function (res) {
+    //     _this.address = geoRes[res.tapIndex].address;
+    //     _this.subName = geoRes[res.tapIndex].subName;
+    //     _this.addValid = true;
+    //     _this.fetchingAddr = false;
+    //   },
+    //   fail: function (res) {
+    //     _this.fetchingAddr = false;
+    //   },
+    // });
     unsave() {
       this.edit = false;
       this.phone = "";
@@ -380,8 +398,9 @@ export default {
 <style lang="scss" scoped>
 .modal {
   padding: 0;
+  margin-bottom: 480rpx;
   .row {
-    padding-left: 14rpx;
+    padding: 30rpx 0 30rpx 24rpx;
   }
 }
 .address {
@@ -491,6 +510,28 @@ export default {
   padding: 0 20rpx;
   color: #1d90fc;
   font-size: 24rpx;
+}
+
+.address-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  div {
+    padding: 6rpx 20rpx;
+  }
+  .button {
+    margin: 10rpx auto;
+    width: 200rpx;
+    background: #fcd81d;
+    border-radius: 100rpx;
+    font-size: 30rpx;
+    text-align: center;
+    padding: 4rpx;
+    box-sizing: border-box;
+  }
 }
 
 .bott {

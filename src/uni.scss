@@ -79,7 +79,11 @@ $light-gray-color: #f7f7f7;
 $gray-color: #666666;
 
 page {
-  word-wrap: break-word;
+  word-break: break-all;
+}
+
+* {
+  word-break: break-all;
 }
 
 .bg {
@@ -98,7 +102,7 @@ page {
 }
 
 .gap {
-  height: 30rpx;
+  height: 18rpx;
 }
 
 .page-gap {

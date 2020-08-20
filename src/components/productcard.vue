@@ -89,7 +89,7 @@ export default {
   background: #f7f7f7;
   .item {
     position: relative;
-    padding: 20rpx;
+    padding: 20rpx 20rpx 0 20rpx;
     height: 460rpx;
     border-radius: 10rpx;
     background: #fff;

@@ -18,21 +18,22 @@
               <image src="/static/down.png" mode="widthFix" style="width:20rpx;margin-right:10rpx;" />
             </div>
           </div>
-          <input type="text" v-model="phone" />
+          <input type="text" placeholder="手机号码" v-model="phone" />
         </div>
-        <div class="veriCode">
+        <!-- <div class="veriCode">
           <input
             :class="{'pass':veriPass,'fail':!veriPass}"
             type="number"
             v-model="veriCode"
             @input="verifyCode"
+            placeholder="验证码"
           />
           <div
             class="get"
             @click="getVeriCode"
             v-if="(!share && !userInfo.phone) || (userInfo && (areaCode+phone) !== defaultAdd.phone)"
           >获取验证码</div>
-        </div>
+        </div>-->
       </div>
       <div class="row">
         <div class="input">
@@ -40,19 +41,26 @@
           <input type="text" v-model="wechat" />
         </div>
       </div>
-      <div class="row">
+      <div class="row" style="position:relative;">
         <div class="input" style="width:90%;">
           <div class="title">收货地址</div>
           <textarea
             type="text"
             style="width:90%;"
             :auto-height="true"
+            placeholder="不要填门牌号"
             v-model="address"
-            @input="disableGeo"
-            @blur="searchGeoLocation"
+            @input="debounceSearchGeoLocation"
           />
         </div>
         <div @click="goAddr" class="getGeo" v-if="showChangeAddress">更换地址</div>
+        <div class="getGeo" v-else @click="getLocation">获取地址</div>
+        <div v-if="pendingAddress.length > 0" class="address-list">
+          <div v-for="item in pendingAddress" :key="item.address" @click="selectAddr(item)">
+            <span>{{item.address}}</span>
+          </div>
+          <div class="button" @click="cancelAddr">取消</div>
+        </div>
       </div>
       <div class="row" @click="openCalendar">
         <div class="input">
@@ -70,9 +78,16 @@
         </div>
       </div>
       <div class="row">
-        <div class="input" style="width:90%;">
+        <div v-if="pendingAddress.length == 0" class="input" style="width:90%;">
           <div class="title">备注</div>
-          <textarea type="text" style="width:90%;" :auto-height="true" v-model="userComment" />
+          <textarea
+            type="text"
+            :placeholder-style="pendingAddress.length > 0?'display:none':''"
+            placeholder="填写门牌号以及其他备注。若有地址不准确或错误，请将正确地址填写在备注上"
+            style="width:90%;min-height:110rpx;"
+            :auto-height="true"
+            v-model="userComment"
+          />
         </div>
       </div>
     </div>
@@ -124,7 +139,7 @@
 
 <script>
 import { mapState } from "vuex";
-import { formatPhoneNumber, checkBill } from "@/util";
+import { formatPhoneNumber, checkBill, debounce } from "@/util";
 export default {
   data() {
     return {
@@ -141,7 +156,8 @@ export default {
       userComment: "",
       shipPrice: null,
       shareProducts: [],
-      shareTotalPrice:'',
+      pendingAddress: [],
+      shareTotalPrice: "",
       cutPrice: null,
       threshold: null,
       veriPass: false,
@@ -191,6 +207,9 @@ export default {
     if (rule) {
       this.ruleText = rule.ruleText;
     }
+  },
+  mounted() {
+    this.debounceSearchGeoLocation = debounce(this.searchGeoLocation, 200);
   },
   computed: {
     ...mapState(["cart", "userInfo"]),
@@ -356,36 +375,39 @@ export default {
       };
     },
     async searchGeoLocation(e) {
-      const _this = this;
+      console.log("debounced");
       const { value } = e.detail;
+      this.subName = "";
       if (!value) {
-        this.subName = "";
         return;
       }
       const geoRes = await this.$request("googleFindAddress", {
-        loading: true,
         data: {
           input: value,
         },
       });
-      if (!geoRes || !geoRes.length) {
+      if (!geoRes) {
         uni.showToast({
           title: "获取地理位置失败",
           icon: "none",
         });
         return;
       }
-      uni.showActionSheet({
-        itemList: geoRes.map((item) => item.address),
-        success: function (res) {
-          _this.address = geoRes[res.tapIndex].address;
-          _this.subName = geoRes[res.tapIndex].subName;
-          _this.fetchShipFeeBySub(geoRes[res.tapIndex].subName);
-        },
-        fail: function (res) {
-          console.log(res.errMsg);
-        },
-      });
+      this.pendingAddress = geoRes;
+      console.log(geoRes);
+    },
+    cancelAddr() {
+      this.address = "";
+      this.subName = "";
+      this.pendingAddress = [];
+    },
+    selectAddr(selection) {
+      const { address, subName } = selection;
+      this.address = address;
+      this.subName = subName;
+      this.addValid = true;
+      this.fetchingAddr = false;
+      this.pendingAddress = [];
     },
     showAction() {
       const _this = this;
@@ -476,9 +498,9 @@ export default {
       if (!this.deliveryTime) {
         errorMsg = "请选择送货日期";
       }
-      if (!this.veriPass) {
-        errorMsg = "请输入正确的手机验证码";
-      }
+      // if (!this.veriPass) {
+      //   errorMsg = "请输入正确的手机验证码";
+      // }
       if (!this.subName) {
         errorMsg = "请选取有效地址";
       }
@@ -508,7 +530,7 @@ export default {
           orderDetail: this.productsToBuy.map((item) => {
             return {
               ...item.product,
-              buyNum: item.num,
+              buyNum: item.num || 1,
             };
           }),
         },
@@ -628,6 +650,29 @@ export default {
     color: #1d90fc;
     width: 140rpx;
     padding: 0 20rpx;
+  }
+}
+
+.address-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  z-index: 9999999;
+  div {
+    padding: 6rpx 20rpx;
+  }
+  .button {
+    margin: 10rpx auto;
+    width: 200rpx;
+    background: #fcd81d;
+    border-radius: 100rpx;
+    font-size: 30rpx;
+    text-align: center;
+    padding: 4rpx;
+    box-sizing: border-box;
   }
 }
 </style>

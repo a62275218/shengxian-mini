@@ -231,6 +231,10 @@ const store = new Vuex.Store({
         console.log(cart);
       }
       if (typeof num !== "undefined") {
+        if(num == 0){
+          cart.splice(index, 1);
+          return
+        }
         cart[index].num = num;
       }
       state.cart = cart;

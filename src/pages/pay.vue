@@ -16,7 +16,7 @@
         </div>
         <div class="content">
           <div class="row" v-for="item in pendingBill.orderDetail" :key="item.id">
-            <image :src="item.imgUrls[0]" style="width:100rpx" mode="widthFix" />
+            <image :src="item.imgUrls[0]" style="width:100rpx;max-height:150rpx;" mode="widthFix" />
             <div class="title">{{item.title}}</div>
             <div class="price">
               <div>$ {{item.price}}</div>
@@ -62,6 +62,12 @@
               {{shipPrice}}
             </div>
           </div>
+          <div class="row">
+            <div class="input">
+              <div class="title">备注</div>
+              <div>{{pendingBill.userComment}}</div>
+            </div>
+          </div>
         </div>
         <div class="total">
           <div style="flex:1;">{{cutText}}</div>
@@ -83,7 +89,11 @@
           <div class="title">支付方式</div>
           <div style="display:flex;align-items:center">
             <div style="margin-right:20rpx;">{{bound?'货到付款':retrivePayLabel(payMode)}}</div>
-            <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
+            <image
+              src="/static/youjiantou-gray.png"
+              mode="widthFix"
+              style="width:30rpx;max-height:120rpx"
+            />
           </div>
         </div>
       </div>
@@ -129,10 +139,21 @@
           </div>
           <button class="button" @click="uploadPay">上传支付凭证</button>
         </block>-->
-        <block v-else-if="payMode ==='RMB支付'" >
-          <div class="large-text">您可以联系客服付款</div>
-          <div class="large-text">支持 微信 支付宝 银行转账</div>
-          <div class="large-text">零手续费 实时汇率</div>
+        <block v-else-if="payMode ==='RMB支付'">
+          <div class="large-text">银行转账/微信/支付宝/ 零手续费 实时汇率</div>
+          <div>农夫生鲜账号(转账请备注下单手机号)</div>
+          <div class="row">
+            <div>Name: fresh go</div>
+            <div class="copy" @click="copy('fresh go')">点此复制</div>
+          </div>
+          <div class="row">
+            <div>BSB: 063109</div>
+            <div class="copy" @click="copy('063109')">点此复制</div>
+          </div>
+          <div class="row">
+            <div>Account: 13315625</div>
+            <div class="copy" @click="copy('13315633')">点此复制</div>
+          </div>
         </block>
         <block v-else-if="payMode ==='货到付款'">
           <div>选择货到付款的客户，请通过下面三种方式支付$20澳元定金，收货时需要支付尾款 ${{pendingBill.price-20>0?(pendingBill.price-20).toFixed(2):0}} 澳币，尾款目前只支持现金支付</div>
@@ -148,7 +169,8 @@
         </block>
         <button open-type="contact" class="button">联系客服</button>
         <button class="button" @click="uploadPay">上传支付凭证</button>
-        <div style="10rpx;"></div>
+        <div style="height:10rpx;"></div>
+        <div v-if="payMode ==='RMB支付'">如需转账信息或其他帮助请联系官方客服:</div>
         <div class="row" v-for="(item,index) in serviceList" :key="item.id">
           <div>客服微信{{index+1}}: {{item.wxId}}</div>
           <div class="copy" @click="copy(item.wxId)">点此复制</div>
@@ -474,8 +496,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.large-text{
-  font-size:30rpx;
+.large-text {
+  font-size: 30rpx;
 }
 .bill {
   border-radius: 14rpx;
@@ -508,6 +530,7 @@ export default {
     }
     .title {
       flex: 1;
+      min-width: 100rpx;
       padding: 10rpx 20rpx;
     }
     .price {

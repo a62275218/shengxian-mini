@@ -4,6 +4,9 @@ export function formatDate(input: string | number, includeTime) {
   if (typeof (input) == 'string' && input.indexOf('-') > -1) {
     input = input.replace(new RegExp('-', 'g'), '/');
   }
+  if(typeof input === 'number' && String(input).length < 13){
+    input = input * 1000
+  }
   const date = new Date(input);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;

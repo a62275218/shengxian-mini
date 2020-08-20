@@ -106,7 +106,7 @@ export default {
         : undefined;
     }
   },
-  async onShow() {
+  async onLoad() {
     const category = await this.$request("fetchCategories", {});
     this.categoryList = category;
     const { subid, categoryid, tagid, keyword, sort } = this.$mp.query;
