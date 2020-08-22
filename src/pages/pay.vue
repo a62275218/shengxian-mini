@@ -143,8 +143,8 @@
           <div class="large-text">银行转账/微信/支付宝/ 零手续费 实时汇率</div>
           <div>农夫生鲜账号(转账请备注下单手机号)</div>
           <div class="row">
-            <div>Name: Fresh go</div>
-            <div class="copy" @click="copy('Fresh go')">点此复制</div>
+            <div>Name: Fresh Go</div>
+            <div class="copy" @click="copy('Fresh Go')">点此复制</div>
           </div>
           <div class="row">
             <div>BSB: 063109</div>
