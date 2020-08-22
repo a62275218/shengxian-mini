@@ -169,7 +169,7 @@ export default Vue.extend({
       if(category.length > 0){
         category.unshift({
           name:'全部商品',
-          imgUrl:'https://freshgo.top/file/newest.png',
+          imgUrl:'https://freshgo.top/file/newIcon.png',
           id:999
         })
       }

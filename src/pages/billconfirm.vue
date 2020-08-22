@@ -71,7 +71,7 @@
             style="width:40rpx;margin-right:10rpx;"
           />
           <div class="delivery" v-if="deliveryTime">{{deliveryTime}}</div>
-          <div v-else style="font-size:24rpx;">8pm前付款隔日配送 周一和节假日不送</div>
+          <div v-else style="font-size:24rpx;">8pm前付款最快隔日送 点此选择日期</div>
         </div>
         <div>
           <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
