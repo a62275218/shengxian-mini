@@ -24,10 +24,6 @@
       </div>
       <div class="gap" style="background:#f7f7f7;"></div>
       <div class="category">
-        <div class="item" @click="goList(999)">
-          <image class="logo" src="https://freshgo.top/file/newest.png" mode="widthFix" />
-          <div>全部商品</div>
-        </div>
         <div class="item" v-for="item in category" :key="item.id" @click="goList(item.id)">
           <image class="logo" :src="item.imgUrl" mode="widthFix" />
           <div>{{item.name}}</div>
@@ -139,7 +135,6 @@ export default Vue.extend({
     async fetchTrotting() {
       this.brodcastLoading = true;
       const brodcasts = await this.$request("fetchNotification", {});
-      console.log('brodcasts',brodcasts)
       this.brodcasts = brodcasts;
       this.brodcastLoading = false;
     },
@@ -171,7 +166,13 @@ export default Vue.extend({
       const category = await this.$request("fetchHomePageCategories", {
         loading: true,
       });
-
+      if(category.length > 0){
+        category.unshift({
+          name:'全部商品',
+          imgUrl:'https://freshgo.top/file/newest.png',
+          id:999
+        })
+      }
       this.category = category;
       this.cateLoading = false;
     },
@@ -240,7 +241,7 @@ export default Vue.extend({
     height: 60rpx;
     position: relative;
     .broadcast {
-      color: #666666;
+      color: #a1a1a1;
       white-space: nowrap;
       height: 100%;
       position: relative;

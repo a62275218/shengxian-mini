@@ -131,7 +131,7 @@ export default {
     if (sort) {
       this.filterTab = [
         { name: "销量", status: "" },
-        { name: "最新", status: "descend" },
+        { name: "最新", status: categoryid?"descend":'ascend' },
         { name: "价格", status: "" }
       ];
     }

@@ -47,7 +47,6 @@
               type="text"
               style="width:97%"
               :auto-height="true"
-              placeholder="不要填门牌号"
               v-model="address"
               @input="debounceSearchGeoLocation"
             />

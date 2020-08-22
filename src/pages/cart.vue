@@ -16,9 +16,7 @@
         />
         <div class="center">
           <div style="width:200rpx;height:200rpx;">
-            <imagep
-              :src="item.product.imgUrls[0]"
-            />
+            <imagep :src="item.product.imgUrls[0]" />
           </div>
 
           <div class="content">
@@ -61,14 +59,14 @@ import { checkBill } from "@/util";
 export default {
   data() {
     return {
-      selectAll: true
+      selectAll: true,
     };
   },
   computed: {
     ...mapState(["cart", "userInfo"]),
     totalPrice() {
       let total = 0;
-      this.cart.forEach(item => {
+      this.cart.forEach((item) => {
         if (item.active) {
           total += item.product.price * item.num;
         }
@@ -77,13 +75,13 @@ export default {
     },
     totalLength() {
       let total = 0;
-      this.cart.forEach(item => {
+      this.cart.forEach((item) => {
         if (item.active) {
           total += 1;
         }
       });
       return total;
-    }
+    },
   },
   // watch: {
   //   selectAll: {
@@ -97,11 +95,11 @@ export default {
     toggleActive(index) {
       this.$store.commit("changeCart", {
         index,
-        active: !this.cart[index].active
+        active: !this.cart[index].active,
       });
       this.$nextTick(() => {
         let activeAll = true;
-        this.cart.forEach(item => {
+        this.cart.forEach((item) => {
           if (!item.active) {
             activeAll = false;
           }
@@ -114,9 +112,15 @@ export default {
         return;
       }
       if (!this.userInfo) {
-        uni.showToast({
-          title: "请先登录",
-          icon: "none"
+        uni.showModal({
+          title: "未登录",
+          content: "请先至'我的'页面，点击左上角立即登入",
+          confirmText: "前往登录",
+          success: () => {
+            uni.switchTab({
+              url: "/pages/my",
+            });
+          },
         });
         return;
       }
@@ -124,20 +128,20 @@ export default {
         loading: true,
         data: {
           products: this.cart
-            .filter(item => item.active)
-            .map(product => {
+            .filter((item) => item.active)
+            .map((product) => {
               return {
                 id: product.product.id,
-                buyNum: product.num
+                buyNum: product.num,
               };
             }),
-          userId: this.userInfo.id
-        }
+          userId: this.userInfo.id,
+        },
       });
       const resultT = checkBill(result);
       if (resultT) {
         uni.navigateTo({
-          url: "/pages/billconfirm"
+          url: "/pages/billconfirm",
         });
       }
     },
@@ -146,26 +150,26 @@ export default {
       uni.showModal({
         title: "提示", //提示的标题,
         content: "确认要删除选中产品吗?", //提示的内容,
-        success: res => {
+        success: (res) => {
           if (res.confirm) {
             _this.$store.commit(
               "batchRemoveFromCart",
               _this.cart
-                .filter(item => {
+                .filter((item) => {
                   return item.active;
                 })
-                .map(i => i.product.id)
+                .map((i) => i.product.id)
             );
           } else if (res.cancel) {
             console.log("用户点击取消");
           }
-        }
+        },
       });
     },
     changeNum(num, index) {
       this.$store.commit("changeCart", {
         index,
-        num: Number(num)
+        num: Number(num),
       });
     },
     toggleSelectAll() {
@@ -173,10 +177,10 @@ export default {
       this.selectAll = slAll;
       this.$store.commit("changeCart", {
         index: "all",
-        active: slAll
+        active: slAll,
       });
-    }
-  }
+    },
+  },
 };
 </script>
 

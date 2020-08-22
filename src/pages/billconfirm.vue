@@ -48,7 +48,6 @@
             type="text"
             style="width:90%;"
             :auto-height="true"
-            placeholder="不要填门牌号"
             v-model="address"
             @input="debounceSearchGeoLocation"
           />
@@ -71,7 +70,8 @@
             mode="widthFix"
             style="width:40rpx;margin-right:10rpx;"
           />
-          <div class="delivery">{{deliveryTime}}</div>
+          <div class="delivery" v-if="deliveryTime">{{deliveryTime}}</div>
+          <div v-else style="font-size:24rpx;">8pm前付款隔日配送 周一和节假日不送</div>
         </div>
         <div>
           <image src="/static/youjiantou-gray.png" mode="widthFix" style="width:30rpx" />
@@ -83,8 +83,8 @@
           <textarea
             type="text"
             :placeholder-style="pendingAddress.length > 0?'display:none':''"
-            placeholder="填写门牌号以及其他备注。若有地址不准确或错误，请将正确地址填写在备注上"
-            style="width:90%;min-height:110rpx;"
+            placeholder="如地址有误，请将准确地址填入备注"
+            style="width:90%;"
             :auto-height="true"
             v-model="userComment"
           />
@@ -475,13 +475,18 @@ export default {
     },
     async confirmPay() {
       if (!this.userInfo) {
-        uni.showToast({
-          title: "请先登录",
-          icon: "none",
+        uni.showModal({
+          title: "未登录",
+          content: "请先至'我的'页面，点击左上角立即登入",
+          confirmText: "前往登录",
+          success: () => {
+            uni.switchTab({
+              url: "/pages/my",
+            });
+          },
         });
         return;
       }
-
       console.log(this.subName);
 
       const _this = this;
@@ -670,7 +675,7 @@ export default {
     margin: 10rpx auto;
     width: 200rpx;
     background: #fcd81d;
-    
+
     border-radius: 100rpx;
     font-size: 30rpx;
     text-align: center;

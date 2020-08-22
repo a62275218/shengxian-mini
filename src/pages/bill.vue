@@ -87,13 +87,34 @@ export default {
   },
   methods: {
     formatDate,
-    goPayment(bill) {
-      this.$store.commit("changePendingBill", bill);
-      uni.navigateTo({
-        url: "/pages/pay",
+    async goPayment(bill) {
+      const result = await this.$request("checkDeliveryDateMakeOrder", {
+        loading: true,
+        data: {
+          deliveryDate: bill.deliveryDate,
+        },
       });
+      if (result) {
+        if (result === "err2") {
+          uni.showToast({
+            title: "该日期已爆单，请更换其他配送日期",
+            icon: "none",
+          });
+        } else {
+          this.$store.commit("changePendingBill", bill);
+          uni.navigateTo({
+            url: "/pages/pay",
+          });
+        }
+      } else {
+        uni.showToast({
+          title: "该日期无法配送,8:00pm前下单可隔日送货,周一和特定节假日不送货",
+          icon: "none",
+          duration: 6000,
+        });
+      }
     },
-    goBill(bill) {
+    async goBill(bill) {
       if (bill.status === "待付款") {
         this.goPayment(bill);
         return;
