@@ -326,7 +326,7 @@ export default {
     },
     showTip() {
       uni.showModal({
-        content: "每天八点半点前订单 隔日可派送 周一和大型节假日不送货",
+        content: "每天八点前订单 隔日可派送 周一和大型节假日不送货",
       });
     },
     async confirmDate(e) {
