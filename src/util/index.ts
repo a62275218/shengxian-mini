@@ -93,9 +93,16 @@ export function request(url: string, param: IRequestParam) {
             const data = getIn(res, "data", "data");
             resolve(getIn(res, "data", "data") === undefined ? res.data : data);
           } else {
+            const errorMsg = getIn(res, "data", "errMsg");
+            console.log(errorMsg)
             if (param && param.errorMsg) {
               uni.showToast({
                 title: param.errorMsg,
+                icon: "none",
+              });
+            }else if(errorMsg){
+              uni.showToast({
+                title: errorMsg,
                 icon: "none",
               });
             }
