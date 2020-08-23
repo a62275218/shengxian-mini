@@ -68,7 +68,7 @@ const store = new Vuex.Store({
     getBaseUrl: async ({ state }) => {
       return new Promise((resolve) => {
         uni.request({
-          url: "https://freshgo123.com/api/public/api/v1/apiControl",
+          url: "https://freshgo.top/api/public/api/v1/apiControl",
           method: "POST",
           success: (res) => {
             state.baseUrl = (res as any).data.data 

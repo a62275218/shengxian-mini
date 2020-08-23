@@ -152,7 +152,7 @@
           </div>
           <div class="row">
             <div>Account: 13315625</div>
-            <div class="copy" @click="copy('13315633')">点此复制</div>
+            <div class="copy" @click="copy('13315625')">点此复制</div>
           </div>
         </block>
         <block v-else-if="payMode ==='货到付款'">
