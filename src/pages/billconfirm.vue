@@ -375,7 +375,6 @@ export default {
       };
     },
     async searchGeoLocation(e) {
-      console.log("debounced");
       const { value } = e.detail;
       this.subName = "";
       if (!value) {
@@ -394,7 +393,6 @@ export default {
         return;
       }
       this.pendingAddress = geoRes;
-      console.log(geoRes);
     },
     cancelAddr() {
       this.address = "";
@@ -405,6 +403,7 @@ export default {
       const { address, subName } = selection;
       this.address = address;
       this.subName = subName;
+      this.fetchShipFeeBySub(subName);
       this.addValid = true;
       this.fetchingAddr = false;
       this.pendingAddress = [];
@@ -487,7 +486,6 @@ export default {
         });
         return;
       }
-      console.log(this.subName);
 
       const _this = this;
       let errorMsg = "";
@@ -556,22 +554,6 @@ export default {
         });
       }
       this.$store.dispatch("retriveUser");
-
-      // uni.showModal({
-      //   title: "支付确认",
-      //   content: "确认要支付这笔订单吗?",
-      //   success: function(res) {
-      //     if (res.confirm) {
-      //       console.log(_this);
-      //       uni.requestPayment({
-      //         provider: "wxpay",
-      //         timeStamp: String(Date.now())
-      //       });
-      //     } else if (res.cancel) {
-      //       console.log("用户点击取消");
-      //     }
-      //   }
-      // });
     },
   },
 };
