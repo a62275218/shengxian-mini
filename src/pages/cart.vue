@@ -8,7 +8,7 @@
       />
       <div>购物车空空如也</div>
     </div>
-    <block v-for="(item,index) in cart" :key="item.product.id">
+    <block v-for="(item,index) in cart" :key="index">
       <div class="white-card item">
         <div
           :class="[{'active button':item.active},{'button':!item.active}]"
@@ -25,11 +25,13 @@
               <div class="price">${{item.product.price}}</div>
               <div style="width:200rpx">
                 <numberbox
-                  :min="0"
+                  :key="index"
+                  :min="1"
                   :max="item.product.storageNum"
                   :initialVal="item.num"
-                  :index="index"
+                  :unique="item"
                   @change="changeNum"
+                  @triggerMin="triggerMin"
                 />
               </div>
             </div>
@@ -166,11 +168,26 @@ export default {
         },
       });
     },
-    changeNum(num, index) {
+    changeNum(num, item) {
+      const {
+        product: { id },
+      } = item;
+      const index = this.cart.findIndex((i) => {
+        return i.product.id === id;
+      });
       this.$store.commit("changeCart", {
         index,
         num: Number(num),
       });
+    },
+    triggerMin(item) {
+      const {
+        product: { id },
+        num,
+      } = item;
+      if (num == 1) {
+        this.$store.commit("batchRemoveFromCart", [id]);
+      }
     },
     toggleSelectAll() {
       const slAll = !this.selectAll;

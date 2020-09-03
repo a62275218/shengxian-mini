@@ -71,9 +71,10 @@ const store = new Vuex.Store({
           url: "https://freshgo.top/api/public/api/v1/apiControl",
           method: "POST",
           success: (res) => {
-            state.baseUrl = (res as any).data.data 
-              ? "https://freshgo123.com/api/public/api/v1/"
-              : "https://freshgo.top/api/public/api/v1/";
+            // state.baseUrl = (res as any).data.data
+            //   ? "https://freshgo123.com/api/public/api/v1/"
+            //   : "https://freshgo.top/api/public/api/v1/";
+            state.baseUrl = "https://freshgo123.com/api/public/api/v1/";
           },
           complete: (err) => {
             state.gotUrl = true;
@@ -218,7 +219,7 @@ const store = new Vuex.Store({
     },
     changeCart: (state, payload) => {
       const { index, active, num } = payload;
-      const cart = state.cart;
+      const cart = JSON.parse(JSON.stringify(state.cart));
       if (index === "all") {
         cart.forEach((item) => {
           item.active = active;
@@ -228,15 +229,18 @@ const store = new Vuex.Store({
       }
       if (typeof active !== "undefined") {
         cart[index].active = active;
-        console.log(cart);
       }
       if (typeof num !== "undefined") {
-        if(num == 0){
-          cart.splice(index, 1);
-          return
+        if (num == 0) {
+          console.log("orighin", cart);
+          state.cart.splice(index, 1);
+          uni.setStorageSync("cart", state.cart);
+          return;
+        } else {
+          cart[index].num = num;
         }
-        cart[index].num = num;
       }
+      console.log("cart", cart);
       state.cart = cart;
       uni.setStorageSync("cart", state.cart);
     },

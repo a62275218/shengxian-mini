@@ -167,7 +167,7 @@
           <div>支持 微信 支付宝 银行转账</div>
           <div>零手续费 实时汇率</div>
         </block>
-        <button open-type="contact" class="button">联系客服</button>
+        <!-- <button open-type="contact" class="button">联系客服</button> -->
         <button class="button" @click="uploadPay">上传支付凭证</button>
         <div style="height:10rpx;"></div>
         <div v-if="payMode ==='RMB支付'">如需转账信息或其他帮助请联系官方客服:</div>
@@ -186,6 +186,7 @@
         <div class="left">{{payMode === 'RoyalPay'?'手续费 0.88%':''}}</div>
         <div class="right" v-if="bound" style="align-self: center;padding-right:20rpx;">请支付20澳元定金</div>
         <div class="confirm" v-if="payMode==='RoyalPay' || payMode==='澳元转账'" @click="payBill">立即支付</div>
+        <div class="bot-center" v-if="!payMode" @click="paymentWay(false)">点此选择支付方式</div>
       </div>
     </div>
   </div>
@@ -193,9 +194,9 @@
 
 <script>
 const payConfig = [
-  { label: "微信支付", value: "RoyalPay" },
-  { label: "visa/master 银行卡 ", value: "澳元转账" },
-  { label: "在线客服转账支付", value: "RMB支付" },
+  { label: "微信在线支付", value: "RoyalPay" },
+  { label: " visa/master card 在线支付", value: "澳元转账" },
+  { label: "转账支付 上传截图", value: "RMB支付" },
   // { label: "货到付款 定金$20", value: "货到付款" },
 ];
 import { mapState } from "vuex";
@@ -203,7 +204,7 @@ import { checkBill, formatDate } from "@/util";
 export default {
   data() {
     return {
-      payMode: "RoyalPay",
+      payMode: "",
       enablePay: true,
       bound: false,
       loading: false,
@@ -426,13 +427,65 @@ export default {
         },
       });
     },
+    uniUploadFile(filePath) {
+      const _this = this;
+      return new Promise((resolve) => {
+        uni.uploadFile({
+          url: `${this.baseUrl}uploadOrderPaymentImg`,
+          name: "file",
+          filePath,
+          formData: {
+            id: _this.pendingBill.orderId,
+          },
+          success: (res) => {
+            _this.loading = false;
+            console.log("res", res);
+            if (res.statusCode === 200) {
+              resolve("success");
+              // uni.showModal({
+              //   title: "提示", //提示的标题,
+              //   content: "上传成功", //提示的内容,
+              //   showCancel: false,
+              //   success: async (res) => {
+              //     _this.updateOrder();
+              //     if (res.confirm) {
+              //       uni.switchTab({
+              //         url: "/pages/my",
+              //       });
+              //       // this.$refs.tab.refetch();
+              //     } else if (res.cancel) {
+              //       uni.switchTab({
+              //         url: "/pages/my",
+              //       });
+              //     }
+              //   },
+              // });
+            } else {
+              resolve("");
+              // uni.showToast({
+              //   title: "上传失败",
+              //   icon: "none",
+              // });
+            }
+          },
+          fail: () => {
+            resolve("");
+            // uni.showToast({
+            //   title: "上传失败",
+            //   icon: "none",
+            // });
+            // _this.loading = false;
+          },
+        });
+      });
+    },
     uploadPay() {
       const _this = this;
       uni.chooseImage({
         count: 1,
         success: (e) => {
-          const filePath = e.tempFilePaths[0];
           _this.loading = true;
+          const filePath = e.tempFilePaths[0];
           uni.uploadFile({
             url: `${this.baseUrl}uploadOrderPaymentImg`,
             name: "file",
@@ -445,7 +498,7 @@ export default {
               if (res.statusCode === 200) {
                 uni.showModal({
                   title: "提示", //提示的标题,
-                  content: "上传成功", //提示的内容,
+                  content: "订单目前状态：待配送\r\n请到 “待配送” 查看订单详情", //提示的内容,
                   showCancel: false,
                   success: async (res) => {
                     _this.updateOrder();
@@ -462,6 +515,7 @@ export default {
                   },
                 });
               } else {
+                _this.loading = false;
                 uni.showToast({
                   title: "上传失败",
                   icon: "none",
@@ -476,6 +530,60 @@ export default {
               _this.loading = false;
             },
           });
+          // const promiseMap = e.tempFilePaths.map((filePath) => {
+          //   return _this.uniUploadFile(filePath);
+          // });
+          // Promise.all(promiseMap).then((res) => {
+          //   console.log(res);
+          //   _this.loading = false;
+          // });
+
+          // e.tempFilePaths.forEach((filePath) => {
+          //   // uni.uploadFile({
+          //   //   url: `${this.baseUrl}uploadOrderPaymentImg`,
+          //   //   name: "file",
+          //   //   filePath,
+          //   //   formData: {
+          //   //     id: _this.pendingBill.orderId,
+          //   //   },
+          //   //   success: (res) => {
+          //   //     _this.loading = false;
+          //   //     console.log("res", res);
+          //   //     if (res.statusCode === 200) {
+          //   //       uni.showModal({
+          //   //         title: "提示", //提示的标题,
+          //   //         content: "上传成功", //提示的内容,
+          //   //         showCancel: false,
+          //   //         success: async (res) => {
+          //   //           _this.updateOrder();
+          //   //           if (res.confirm) {
+          //   //             uni.switchTab({
+          //   //               url: "/pages/my",
+          //   //             });
+          //   //             // this.$refs.tab.refetch();
+          //   //           } else if (res.cancel) {
+          //   //             uni.switchTab({
+          //   //               url: "/pages/my",
+          //   //             });
+          //   //           }
+          //   //         },
+          //   //       });
+          //   //     } else {
+          //   //       uni.showToast({
+          //   //         title: "上传失败",
+          //   //         icon: "none",
+          //   //       });
+          //   //     }
+          //   //   },
+          //   //   fail: () => {
+          //   //     uni.showToast({
+          //   //       title: "上传失败",
+          //   //       icon: "none",
+          //   //     });
+          //   //     _this.loading = false;
+          //   //   },
+          //   // });
+          // });
         },
         fail: () => {
           _this.loading = false;
@@ -616,6 +724,11 @@ export default {
     margin: 26rpx 0;
     font-size: 28rpx;
   }
+}
+.bot-center {
+  text-align: center;
+  width: 100%;
+  align-self: center;
 }
 .bottom-control {
   min-height: 110rpx;

@@ -2,7 +2,7 @@
   <div class="box" @click.stop>
     <div class="side" @click="minus">-</div>
     <div class="center">
-      <input :disabled="true"  type="number"  v-model="value" />
+      <input :disabled="true" type="number" v-model="input" />
     </div>
     <div class="side" @click="add">+</div>
   </div>
@@ -10,25 +10,29 @@
 
 <script>
 export default {
-  props: ["max", "min", "initialVal", "index"],
+  props: ["max", "min", "initialVal", "unique"],
   data() {
     return {
-      value: 0
+      input: 0,
     };
+  },
+  mounted() {
+    this.input = this.initialVal !== undefined ? this.initialVal : 0;
   },
   watch: {
     initialVal: {
       immediate: true,
       handler(val) {
+        console.log("init", val);
         if (val) {
-          this.value = val;
+          this.input = val;
         }
-      }
-    }
+      },
+    },
   },
   methods: {
     handleValChange(e) {
-      let value = Number(e.detail.value.replace(/[^0-9]/ig,""));
+      let value = Number(e.detail.value.replace(/[^0-9]/gi, ""));
       if (this.max !== null || this.min !== null) {
         if (Number(value) > Number(this.max)) {
           value = Number(this.max);
@@ -36,26 +40,34 @@ export default {
           value = this.min;
         }
       }
-      this.value = Number(value);
-      this.$emit("change", value, this.index);
+      this.input = Number(value);
+      this.$emit("change", value, this.unique);
     },
-    minus() {
+    minus(e) {
+      let result = this.input;
+      console.log("this", result - 1);
       if (this.min !== null) {
-        this.value = this.value - 1 < this.min ? this.min : this.value - 1;
+        const next = result - 1
+        result = next < this.min ? this.min : next;
+        if (next < this.min) {
+          this.$emit("triggerMin", this.unique);
+          return;
+        }
       } else {
-        this.value - 1;
+        result -= 1;
       }
-      this.$emit("change", this.value, this.index);
+      this.input = result;
+      this.$emit("change", result, this.unique);
     },
-    add() {
+    add(e) {
       if (this.max !== null) {
-        this.value = this.value + 1 > this.max ? this.max : this.value + 1;
+        this.input = this.input + 1 > this.max ? this.max : this.input + 1;
       } else {
-        this.value += 1;
+        this.input += 1;
       }
-      this.$emit("change", this.value, this.index);
-    }
-  }
+      this.$emit("change", this.input, this.unique);
+    },
+  },
 };
 </script>
 

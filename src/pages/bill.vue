@@ -12,7 +12,10 @@
     <block v-for="bill in bills" :key="bill.id">
       <div class="white-card bill">
         <div class="top">
-          <div>下单时间: {{formatDate(bill.createTime,true)}}</div>
+          <div>
+            <div style="margin-bottom:10rpx;">下单时间: {{formatDate(bill.createTime,true)}}</div>
+            <div>配送日期: {{formatDate(bill.deliveryDate)}}</div>
+          </div>
           <div>{{bill.status}}</div>
         </div>
         <div class="content" @click="goBill(bill)">
@@ -45,7 +48,7 @@
           </div>
           <div class="control">
             <div class="cancel btn" @click="cancelOrder(bill)" v-if="currentIndex === 0">取消订单</div>
-            <div class="pay btn" @click="goPayment(bill)" v-if="currentIndex === 0">立即支付</div>
+            <div class="pay btn" @click="goBill(bill,true)" v-if="currentIndex === 0">立即支付</div>
             <div class="pay btn" @click="confirmBill(bill)" v-if="currentIndex === 1">确认收货</div>
           </div>
         </div>
@@ -87,40 +90,52 @@ export default {
   },
   methods: {
     formatDate,
-    async goPayment(bill) {
-      const result = await this.$request("checkDeliveryDateMakeOrder", {
+    async goBill(pendingBill, isPayment) {
+      const { orderId } = pendingBill;
+      const bill = await this.$request("fetchOrderByOrderId", {
         loading: true,
         data: {
-          deliveryDate: bill.deliveryDate,
+          orderId,
         },
       });
-      if (result) {
-        if (result === "err2") {
-          uni.showToast({
-            title: "该日期已爆单，请更换其他配送日期",
-            icon: "none",
-          });
-        } else {
-          this.$store.commit("changePendingBill", bill);
-          uni.navigateTo({
-            url: "/pages/pay",
-          });
-        }
-      } else {
+      if (!bill) {
         uni.showToast({
-          title: "该日期无法配送,8:00pm前下单可隔日送货,周一和特定节假日不送货",
+          title: "获取订单失败",
           icon: "none",
-          duration: 6000,
         });
-      }
-    },
-    async goBill(bill) {
-      if (bill.status === "待付款") {
-        this.goPayment(bill);
         return;
       }
       this.$store.commit("changePendingBill", bill);
-      uni.navigateTo({ url: `/pages/pay?mode=detail` });
+      if (bill.status === "待付款" || isPayment) {
+        const result = await this.$request("checkDeliveryDateMakeOrder", {
+          loading: true,
+          data: {
+            deliveryDate: bill.deliveryDate,
+          },
+        });
+        if (result) {
+          if (result === "err2") {
+            uni.showToast({
+              title: "该日期已爆单，请更换其他配送日期",
+              icon: "none",
+            });
+          } else {
+            this.$store.commit("changePendingBill", bill);
+            uni.navigateTo({
+              url: "/pages/pay",
+            });
+          }
+        } else {
+          uni.showModal({
+            content:
+              "抱歉！由于您在8pm前未成功付款，订单目前无法支付\r\n请您联系客服选择新的配送日期\r\n(8pm前付款 隔日配送)",
+            icon: "none",
+            duration: 6000,
+          });
+        }
+      } else {
+        uni.navigateTo({ url: `/pages/pay?mode=detail` });
+      }
     },
     cancelOrder(bill) {
       uni.showModal({

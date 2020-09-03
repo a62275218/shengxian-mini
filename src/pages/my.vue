@@ -28,7 +28,11 @@
     <div class="white-card service-section">
       <div class="section-title">我的服务</div>
       <block v-for="item in menu2" :key="item.title">
-        <div class="row" v-if="userInfo || item.title==='联系客服' || item.title==='关于我们'" @click="navigateService(item.url)">
+        <div
+          class="row"
+          v-if="userInfo || item.title==='联系客服' || item.title==='关于我们'"
+          @click="navigateService(item.url)"
+        >
           <div class="left">
             <image style="width:60rpx;" :src="item.icon" mode="widthFix" />
             {{item.title}}
@@ -36,7 +40,7 @@
           <div>
             <image style="width:30rpx;" src="/static/youjiantou-gray.png" mode="widthFix" />
           </div>
-          <button open-type="contact" v-if="item.title==='联系客服'" class="hidden-btn"></button>
+          <!-- <button open-type="contact" v-if="item.title==='联系客服'" class="hidden-btn"></button> -->
         </div>
       </block>
     </div>
@@ -51,54 +55,55 @@ export default {
       menu: [
         {
           icon: "/static/daifukuan.png",
-          title: "待付款"
+          title: "待付款",
         },
         {
           icon: "/static/peisongzhong.png",
-          title: "待配送"
+          title: "待配送",
         },
         {
           icon: "/static/yiwancheng.png",
-          title: "已完成"
+          title: "已完成",
         },
         {
           icon: "/static/yituikuan.png",
-          title: "已退款"
-        }
+          title: "已退款",
+        },
       ],
       menu2: [
         {
           icon: "/static/wodexiangqing.png",
           title: "我的信息",
-          url: "/pages/address"
+          url: "/pages/address",
         },
         {
           icon: "/static/liulanlishi.png",
           title: "浏览历史",
-          url: "/pages/history"
+          url: "/pages/history",
         },
         {
           icon: "/static/wodeshoucang.png",
           title: "我的收藏",
-          url: "/pages/favorite"
+          url: "/pages/favorite",
         },
         {
           icon: "/static/lianxikefu.png",
-          title: "联系客服"
+          title: "联系客服",
+          url: "/pages/about",
         },
         {
           icon: "/static/info.png",
           title: "关于我们",
-          url: "/pages/about"
-        }
-      ]
+          url: "/pages/about",
+        },
+      ],
     };
   },
-  onShow(){
+  onShow() {
     this.$store.dispatch("retriveUser");
   },
   computed: {
-    ...mapState(["userInfo"])
+    ...mapState(["userInfo"]),
   },
   methods: {
     login(userInfoRes) {
@@ -106,18 +111,18 @@ export default {
     },
     navigateBill(title) {
       uni.navigateTo({
-        url: `/pages/bill?type=${title}`
+        url: `/pages/bill?type=${title}`,
       });
     },
     navigateService(url) {
       if (url) {
         console.log(url);
         uni.navigateTo({
-          url
+          url,
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
