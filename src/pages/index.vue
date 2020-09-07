@@ -30,6 +30,23 @@
         </div>
       </div>
     </div>
+    <template v-if="limitedProducts.length >0">
+      <div class="gap" style="background:#f7f7f7;"></div>
+      <div class="limited-block">
+        <div class="header">
+          <div class="title">限时购</div>
+          <div class="time">{{hours}}</div>:
+          <div class="time">{{minutes}}</div>:
+          <div class="time">{{seconds}}</div>
+          <div class="sub">限时限量 低价疯抢</div>
+        </div>
+        <div class="products">
+          <div class="product-item" v-for="product in limitedProducts" :key="product.id">
+            <productcard imgHeight="200rpx" :item="product" :breakLine="true" />
+          </div>
+        </div>
+      </div>
+    </template>
     <div class="gap"></div>
     <div class="white-card ad-card">
       <image :src="firstAd" style="width:100%;vertical-align:middle" mode="widthFix" />
@@ -77,6 +94,7 @@ export default Vue.extend({
       banners: [],
       category: [],
       indexProducts: [],
+      limitedProducts: [],
       brodcasts: [],
       firstAd: "",
       secondAd: "",
@@ -84,10 +102,28 @@ export default Vue.extend({
       cateLoading: true,
       productLoading: true,
       adLoading: true,
+      limitLoading: true,
+      restTime: 0,
+      timer: null,
     };
   },
   computed: {
     ...mapState(["userInfo", "gotUrl"]),
+    hours() {
+      return this.restTime > 0
+        ? String(Math.floor(this.restTime / 3600)).padStart(2, "0")
+        : "";
+    },
+    minutes() {
+      return this.restTime > 0
+        ? String(Math.floor((this.restTime / 60) % 60)).padStart(2, "0")
+        : "";
+    },
+    seconds() {
+      return this.restTime > 0
+        ? String(this.restTime % 60).padStart(2, "0")
+        : "";
+    },
   },
   async onLoad() {
     let timer = setInterval(() => {
@@ -97,6 +133,7 @@ export default Vue.extend({
         this.fetchProducts();
         this.fetchTrotting();
         this.fetchBanner();
+        this.fetchLimitedProduct();
         clearInterval(timer);
         timer = undefined;
       }
@@ -166,12 +203,12 @@ export default Vue.extend({
       const category = await this.$request("fetchHomePageCategories", {
         loading: true,
       });
-      if(category.length > 0){
+      if (category.length > 0) {
         category.unshift({
-          name:'全部商品',
-          imgUrl:'https://freshgo.top/file/newIcon.png',
-          id:999
-        })
+          name: "全部商品",
+          imgUrl: "https://freshgo.top/file/newIcon.png",
+          id: 999,
+        });
       }
       this.category = category;
       this.cateLoading = false;
@@ -189,6 +226,31 @@ export default Vue.extend({
         this.firstAd = ads[0].imgUrl;
         this.secondAd = ads[1].imgUrl;
       }
+    },
+    async fetchLimitedProduct() {
+      this.limitLoading = true;
+      const limitRes = await this.$request("fetchLimitedProduct", {
+        loading: true,
+      });
+      this.limitLoading = false;
+      if (limitRes) {
+        const { product, restTime } = limitRes;
+        this.limitedProducts = product;
+        this.restTime = restTime;
+        if (this.timer) {
+          clearInterval(this.timer);
+        } else {
+          this.timer = setInterval(() => {
+            if (this.restTime - 1 <= 0) {
+              this.restTime = 0;
+              clearInterval(this.timer);
+              return;
+            }
+            this.restTime -= 1;
+          }, 1000);
+        }
+      }
+      console.log("limitedProducts", limitRes);
     },
     async fetchProducts() {
       this.productLoading = true;
@@ -221,10 +283,10 @@ export default Vue.extend({
 
 @keyframes horizontal {
   0% {
-    transform:translate3d(0,0,0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform:translate3d(-100%,0,0);
+    transform: translate3d(-100%, 0, 0);
   }
 }
 
@@ -245,13 +307,13 @@ export default Vue.extend({
       white-space: nowrap;
       height: 100%;
       position: relative;
-      transform:translate3d(0,0,0);
-      margin-left:100%;
+      transform: translate3d(0, 0, 0);
+      margin-left: 100%;
       top: 0;
       display: flex;
       font-size: 24rpx;
       align-items: center;
-      width:fit-content;
+      width: fit-content;
       animation: horizontal 300s linear infinite;
       & div {
         padding-right: 80rpx;
@@ -282,7 +344,7 @@ export default Vue.extend({
     font-size: 26rpx;
     .logo {
       width: 100%;
-      max-height:140rpx;
+      max-height: 140rpx;
       margin-bottom: 10rpx;
     }
   }
@@ -318,6 +380,43 @@ export default Vue.extend({
       align-items: center;
       font-size: 24rpx;
       color: #858585;
+    }
+  }
+}
+
+.limited-block {
+  width: 96%;
+  border-radius: 30rpx;
+  overflow: hidden;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 4rpx 4rpx 8rpx rgba(0, 0, 0, 0.1);
+  .header {
+    padding: 20rpx 20rpx;
+    display: flex;
+    align-items: center;
+    .title {
+      font-weight: bold;
+      margin-right: 10rpx;
+    }
+    .time {
+      background: #f5273c;
+      color: #fff;
+      border-radius: 10rpx;
+      padding: 0 8rpx;
+      margin: 0 6rpx;
+    }
+    .sub {
+      color: #919191;
+      font-size: 24rpx;
+      margin-left: 20rpx;
+    }
+  }
+  .products {
+    display: flex;
+    flex-wrap: wrap;
+    .product-item {
+      width: calc(100% / 3);
     }
   }
 }

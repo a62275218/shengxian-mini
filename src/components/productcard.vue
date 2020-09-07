@@ -17,13 +17,13 @@
           <span style="font-size:30rpx;">${{item.price}}</span>
           <span>/{{item.unit}}</span>
         </div>
-        <div class="num" v-if="!breakLine">
+        <div class="num" v-if="!breakLine && !hideCart">
           <div class="btn" v-if="num>0" @click="removeCart">-</div>
           <div class="number" v-if="num>0">{{num}}</div>
           <div class="btn" @click="addCart" v-if="Number(item.storageNum)>0">+</div>
         </div>
       </div>
-      <div class="num" v-if="breakLine">
+      <div class="num" v-if="breakLine && !hideCart">
         <div class="btn" v-if="num>0" @click="removeCart">-</div>
         <div class="number" v-if="num>0">{{num}}</div>
         <div class="btn" @click="addCart" v-if="Number(item.storageNum)>0">+</div>
@@ -35,11 +35,11 @@
 <script>
 import { mapState } from "vuex";
 export default {
-  props: ["item", "height", "breakLine", "imgHeight"],
+  props: ["item", "height", "breakLine", "imgHeight", "hideCart"],
   computed: {
     ...mapState(["cart"]),
     num() {
-      const cartItem = this.cart.find(item => {
+      const cartItem = this.cart.find((item) => {
         return item.product.id == this.item.id;
       });
       if (!cartItem) {
@@ -47,7 +47,7 @@ export default {
       } else {
         return cartItem.num;
       }
-    }
+    },
   },
   methods: {
     goDetail(id) {
@@ -57,7 +57,7 @@ export default {
       if (this.num > 0) {
         this.$store.commit("minusCart", {
           product: this.item,
-          num: 1
+          num: 1,
         });
       }
     },
@@ -69,16 +69,16 @@ export default {
         this.$store.commit("addCart", {
           product: this.item,
           num: 1,
-          toast: false
+          toast: false,
         });
       } else {
         uni.showToast({
           title: "没有库存啦",
-          icon: "none"
+          icon: "none",
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

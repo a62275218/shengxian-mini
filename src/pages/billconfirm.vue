@@ -54,11 +54,32 @@
         </div>
         <div @click="goAddr" class="getGeo" v-if="showChangeAddress">更换地址</div>
         <div class="getGeo" v-else @click="getLocation">获取地址</div>
-        <div v-if="pendingAddress.length > 0" class="address-list">
-          <div v-for="item in pendingAddress" :key="item.address" @click="selectAddr(item)">
-            <span>{{item.address}}</span>
-          </div>
-          <div class="button" @click="cancelAddr">取消</div>
+        <div class="scroll-wrap" v-if="pendingAddress.length > 0">
+          <scroll-view class="address-list">
+            <div v-for="item in pendingAddress" :key="item.address" @click="selectAddr(item)">
+              <span>{{item.address}}</span>
+            </div>
+          </scroll-view>
+          <div class="fixbtn" @click="cancelAddr">取消</div>
+        </div>
+      </div>
+      <div class="row" style="position:relative;">
+        <div class="scroll-wrap" v-if="pendingSubs.length > 0">
+          <scroll-view scroll-y class="address-list">
+            <div v-for="item in pendingSubs" :key="item.id" @click="selectSub(item)">
+              <span>{{item.subName}}</span>
+            </div>
+          </scroll-view>
+          <div class="fixbtn" @click="cancelSub">取消</div>
+        </div>
+        <div class="input" style="width:90%" v-if="pendingAddress.length === 0">
+          <div class="title">收货地区</div>
+          <input
+            style="max-height:30rpx;"
+            placeholder="请搜索选择区名如Box Hill"
+            v-model="subName"
+            @input="debounceSearchSub"
+          />
         </div>
       </div>
       <div class="row" @click="openCalendar">
@@ -157,12 +178,14 @@ export default {
       shipPrice: null,
       shareProducts: [],
       pendingAddress: [],
+      pendingSubs: [],
       shareTotalPrice: "",
       cutPrice: null,
       threshold: null,
       veriPass: false,
       geoLocation: undefined,
       share: false,
+      subValid: false,
       defaultAdd: undefined,
       cutText_c: false,
       shipText_c: false,
@@ -210,6 +233,7 @@ export default {
   },
   mounted() {
     this.debounceSearchGeoLocation = debounce(this.searchGeoLocation, 200);
+    this.debounceSearchSub = debounce(this.searchSub, 200);
   },
   computed: {
     ...mapState(["cart", "userInfo"]),
@@ -232,7 +256,7 @@ export default {
     },
     cutText() {
       if (this.threshold) {
-        if (!this.subName) {
+        if (!this.subName || typeof this.shipPrice !== "number") {
           return "";
         }
         if (this.totalP >= this.threshold) {
@@ -296,8 +320,28 @@ export default {
         url: "/pages/address?type=confirm",
       });
     },
-    disableGeo(e) {
-      this.subName = null;
+    async searchSub(e) {
+      this.shipPrice = null;
+      this.pendingAddress = [];
+      this.subValid = false;
+      const { value } = e.detail;
+      const subRes = await this.$request("fetchFeeByKeyword", {
+        data: {
+          keyword: value,
+        },
+      });
+      if (!subRes) {
+        uni.showToast({
+          title: "获取区域失败",
+          icon: "none",
+        });
+        return;
+      }
+      this.pendingSubs = subRes;
+    },
+    cancelSub() {
+      this.subName = "";
+      this.pendingSubs = [];
     },
     async fetchShipFeeBySub(val) {
       if (val) {
@@ -375,8 +419,8 @@ export default {
       };
     },
     async searchGeoLocation(e) {
+      this.pendingSubs = [];
       const { value } = e.detail;
-      this.subName = "";
       if (!value) {
         return;
       }
@@ -396,14 +440,18 @@ export default {
     },
     cancelAddr() {
       this.address = "";
-      this.subName = "";
       this.pendingAddress = [];
+    },
+    selectSub(selection) {
+      const { subName } = selection;
+      this.subName = subName;
+      this.fetchShipFeeBySub(subName);
+      this.subValid = true;
+      this.pendingSubs = [];
     },
     selectAddr(selection) {
       const { address, subName } = selection;
       this.address = address;
-      this.subName = subName;
-      this.fetchShipFeeBySub(subName);
       this.addValid = true;
       this.fetchingAddr = false;
       this.pendingAddress = [];
@@ -640,24 +688,28 @@ export default {
   }
 }
 
-.address-list {
+.scroll-wrap {
   position: absolute;
+  width: 100%;
   top: 100%;
   left: 0;
   background: #fff;
   border-radius: 20rpx;
-  font-size: 28rpx;
-  z-index: 99;
   border: 2rpx solid #f0f0f0;
-  div {
-    padding: 8rpx 20rpx;
-    border-bottom: 2rpx solid #f0f0f0;
+  z-index: 999;
+  .address-list {
+    max-height: 300rpx;
+    font-size: 28rpx;
+    overflow: hidden;
+    div {
+      padding: 12rpx 20rpx;
+      border-bottom: 2rpx solid #f0f0f0;
+    }
   }
-  .button {
+  .fixbtn {
     margin: 10rpx auto;
     width: 200rpx;
     background: #fcd81d;
-
     border-radius: 100rpx;
     font-size: 30rpx;
     text-align: center;

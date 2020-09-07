@@ -336,10 +336,26 @@ export default {
         },
       });
     },
-    payBill() {
+    async payBill() {
       if (!this.enablePay) {
         return;
       }
+      console.log(this.pendingBill)
+      const { orderId } = this.pendingBill;
+      const bill = await this.$request("fetchOrderByOrderId", {
+        loading: true,
+        data: {
+          orderId,
+        },
+      });
+      if (!bill) {
+        uni.showToast({
+          title: "获取订单失败",
+          icon: "none",
+        });
+        return;
+      }
+      this.$store.commit("changePendingBill", bill);
       const _this = this;
       this.enablePay = false;
       uni.getProvider({
@@ -351,8 +367,8 @@ export default {
               loading: true,
               data: {
                 timeStamp: Date.now(),
-                orderId: this.pendingBill.orderId,
-                price: this.bound ? 20 : this.pendingBill.price,
+                orderId: bill.orderId,
+                price: this.bound ? 20 : bill.price,
                 openId: this.userInfo.openId,
               },
             });
@@ -392,8 +408,8 @@ export default {
               loading: true,
               data: {
                 timeStamp: Date.now(),
-                orderId: this.pendingBill.orderId,
-                price: this.bound ? 20 : this.pendingBill.price,
+                orderId: bill.orderId,
+                price: this.bound ? 20 : bill.price,
                 openId: this.userInfo.openId,
               },
             });
@@ -405,7 +421,7 @@ export default {
                 console.log("pay_url", encodeURIComponent(pay_url));
                 uni.navigateTo({
                   url: `/pages/webview?partnerOrderId=${partner_order_id}&orderId=${
-                    this.pendingBill.orderId
+                    bill.orderId
                   }&url=${encodeURIComponent(pay_url)}`,
                 });
               }
@@ -729,6 +745,7 @@ export default {
   text-align: center;
   width: 100%;
   align-self: center;
+  padding:50rpx 0;
 }
 .bottom-control {
   min-height: 110rpx;

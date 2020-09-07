@@ -146,6 +146,7 @@ export function debounce(func, wait) {
     if (timer) clearTimeout(timer);
 
     timer = setTimeout(() => {
+      console.log('apply')
       func.apply(_this, args);
     }, wait);
   };
