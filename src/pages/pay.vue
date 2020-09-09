@@ -183,7 +183,7 @@
         class="bottom-control"
         v-if="(payMode==='RoyalPay' || payMode==='澳元转账' || !payMode || bound) && !detail"
       >
-        <div class="left">{{payMode === 'RoyalPay'?'手续费 0.88%':''}}</div>
+        <div class="left" v-if="payMode">{{payMode === 'RoyalPay'?'手续费 0.88%':''}}</div>
         <div class="right" v-if="bound" style="align-self: center;padding-right:20rpx;">请支付20澳元定金</div>
         <div class="confirm" v-if="payMode==='RoyalPay' || payMode==='澳元转账'" @click="payBill">立即支付</div>
         <div class="bot-center" v-if="!payMode" @click="paymentWay(false)">点此选择支付方式</div>
@@ -340,7 +340,7 @@ export default {
       if (!this.enablePay) {
         return;
       }
-      console.log(this.pendingBill)
+      console.log(this.pendingBill);
       const { orderId } = this.pendingBill;
       const bill = await this.$request("fetchOrderByOrderId", {
         loading: true,
@@ -513,7 +513,7 @@ export default {
               _this.loading = false;
               if (res.statusCode === 200) {
                 uni.showModal({
-                  title: "提示", //提示的标题,
+                  title: "支付成功", //提示的标题,
                   content: "订单目前状态：待配送\r\n请到 “待配送” 查看订单详情", //提示的内容,
                   showCancel: false,
                   success: async (res) => {
@@ -744,8 +744,10 @@ export default {
 .bot-center {
   text-align: center;
   width: 100%;
+  color:#000;
+  background: #fcd81d;
   align-self: center;
-  padding:50rpx 0;
+  padding: 40rpx 0;
 }
 .bottom-control {
   min-height: 110rpx;

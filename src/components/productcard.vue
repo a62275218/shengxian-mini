@@ -17,17 +17,17 @@
           <span style="font-size:30rpx;">${{item.price}}</span>
           <span>/{{item.unit}}</span>
         </div>
-        <div class="num" v-if="!breakLine && !hideCart">
-          <div class="btn" v-if="num>0" @click="removeCart">-</div>
-          <div class="number" v-if="num>0">{{num}}</div>
+        <div class="num" v-if="!hideCart">
+          <!-- <div class="btn" v-if="num>0" @click="removeCart">-</div>
+          <div class="number" v-if="num>0">{{num}}</div> -->
           <div class="btn" @click="addCart" v-if="Number(item.storageNum)>0">+</div>
         </div>
       </div>
-      <div class="num" v-if="breakLine && !hideCart">
+      <!-- <div class="num" v-if="breakLine && !hideCart">
         <div class="btn" v-if="num>0" @click="removeCart">-</div>
         <div class="number" v-if="num>0">{{num}}</div>
         <div class="btn" @click="addCart" v-if="Number(item.storageNum)>0">+</div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -66,6 +66,9 @@ export default {
     },
     addCart() {
       if (this.num < this.item.storageNum) {
+        uni.showToast({
+          title:'加入购物车成功'
+        })
         this.$store.commit("addCart", {
           product: this.item,
           num: 1,

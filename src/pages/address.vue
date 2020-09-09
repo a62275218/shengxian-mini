@@ -71,10 +71,10 @@
             <div class="fixbtn" @click="cancelSub">取消</div>
           </div>
           <div class="input" style="width:90%" v-if="pendingAddress.length === 0">
-            <div class="title">收货地区</div>
+            <div class="title">Suburb/区</div>
             <input
-              style="max-height:30rpx;"
-              placeholder="请搜索选择区名如Box Hill"
+              style="max-height:30rpx;width:100%;"
+              placeholder="输入并选择Sub区名 如Box Hill"
               v-model="subName"
               @input="debounceSearchSub"
             />
@@ -162,6 +162,16 @@ export default {
           this.areaCode + val === this.deliveryDetail[this.editing].phone;
       }
     },
+    pendingAddress(val) {
+      if (val.length > 0) {
+        this.pendingSubs = [];
+      }
+    },
+    pendingSubs(val) {
+      if (val.length > 0) {
+        this.pendingAddress = [];
+      }
+    },
     areaCode(val) {
       if (this.editing || this.editing === 0) {
         this.veriPass =
@@ -206,6 +216,9 @@ export default {
       this.wechat = wechat;
       this.address = address;
       this.subName = subName;
+      if (subName) {
+        this.subValid = true;
+      }
       this.edit = true;
     },
     deleteAdd(index) {
@@ -282,6 +295,7 @@ export default {
     },
     async searchSub(e) {
       this.pendingAddress = [];
+      console.log("sub invalid");
       this.subValid = false;
       const { value } = e.detail;
       const subRes = await this.$request("fetchFeeByKeyword", {
@@ -332,7 +346,10 @@ export default {
     selectAddr(selection) {
       const { address, subName } = selection;
       this.address = address;
-      //this.subName = subName;
+      if (subName) {
+        this.subName = subName;
+        this.subValid = true;
+      }
       this.addValid = true;
       this.fetchingAddr = false;
       this.pendingAddress = [];
@@ -340,6 +357,7 @@ export default {
     selectSub(selection) {
       const { subName } = selection;
       this.subName = subName;
+      console.log("sub valid");
       this.subValid = true;
       this.pendingSubs = [];
     },
@@ -403,7 +421,10 @@ export default {
             _this.addValid = false;
           } else {
             _this.address = geoRes.address;
-            //_this.subName = geoRes.subName;
+            if (geoRes.subName) {
+              _this.subName = geoRes.subName;
+              _this.subValid = true;
+            }
             _this.addValid = true;
           }
         },

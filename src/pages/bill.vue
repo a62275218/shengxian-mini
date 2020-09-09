@@ -14,7 +14,7 @@
         <div class="top">
           <div>
             <div style="margin-bottom:10rpx;">下单时间: {{formatDate(bill.createTime,true)}}</div>
-            <div>配送日期: {{formatDate(bill.deliveryDate)}}</div>
+            <div>配送日期: {{formatDate(bill.deliveryDate)}} 9am - 9pm</div>
           </div>
           <div>{{bill.status}}</div>
         </div>
@@ -218,7 +218,7 @@ export default {
         });
       }
       uni.previewImage({
-        urls: [src], //需要预览的图片链接列表,
+        urls: typeof src === "string" ? [src] : src, //需要预览的图片链接列表,
       });
     },
   },

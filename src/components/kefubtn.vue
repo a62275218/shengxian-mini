@@ -8,22 +8,22 @@
 <script>
 import { mapState } from "vuex";
 export default {
-  props:["bottom"],
+  props: ["bottom"],
   computed: {
-    ...mapState(["cart"])
+    ...mapState(["cart"]),
   },
   methods: {
-    goAbout(){
+    goAbout() {
       uni.navigateTo({
-        url: "/pages/about"
+        url: "/pages/about",
       });
     },
     goCart() {
       uni.switchTab({
-        url: "/pages/cart"
+        url: "/pages/cart",
       });
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -44,6 +44,7 @@ export default {
   width: 100rpx;
   height: 100rpx;
   background: #ffd66d;
+  border: 2rpx solid #fff;
   border-radius: 50%;
   .number {
     position: absolute;

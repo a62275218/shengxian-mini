@@ -6,7 +6,7 @@
       <div class="search">
         <searchbar placeholder="搜索" @search="goSearchList" />
       </div>
-      <swiper style="height:380rpx" :autoplay="true">
+      <swiper style="height:380rpx" :autoplay="true" :interval="3000">
         <block v-for="item in banners" :key="item.id">
           <swiper-item @click="goProduct(item)">
             <imagep :src="item.imgUrl" @load="(item)=>handleLoad(item)" />
@@ -34,10 +34,10 @@
       <div class="gap" style="background:#f7f7f7;"></div>
       <div class="limited-block">
         <div class="header">
-          <div class="title">限时购</div>
-          <div class="time">{{hours}}</div>:
-          <div class="time">{{minutes}}</div>:
-          <div class="time">{{seconds}}</div>
+          <div class="title">秒杀专区</div>
+          <div class="time">{{hours}}</div>时
+          <div class="time">{{minutes}}</div>分
+          <div class="time">{{seconds}}</div>秒
           <div class="sub">限时限量 低价疯抢</div>
         </div>
         <div class="products">

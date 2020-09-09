@@ -1,6 +1,6 @@
 <template>
   <div class="bg confirm-bg">
-    <kefubtn :bottom="140" />
+    <kefubtn :bottom="160" />
     <uniCalendar ref="calendar" :insert="false" @confirm="confirmDate" />
     <div class="row-card">
       <div class="row">
@@ -73,10 +73,10 @@
           <div class="fixbtn" @click="cancelSub">取消</div>
         </div>
         <div class="input" style="width:90%" v-if="pendingAddress.length === 0">
-          <div class="title">收货地区</div>
+          <div class="title">Suburb/区</div>
           <input
-            style="max-height:30rpx;"
-            placeholder="请搜索选择区名如Box Hill"
+            style="max-height:30rpx;width:100%;"
+            placeholder="输入并选择Sub区名 如Box Hill"
             v-model="subName"
             @input="debounceSearchSub"
           />
@@ -217,6 +217,9 @@ export default {
       if (defaultAdd) {
         this.address = defaultAdd.address;
         this.subName = defaultAdd.subName;
+        if (defaultAdd.subName) {
+          this.subValid = true;
+        }
         this.wechat = defaultAdd.wechat || "";
         this.name = defaultAdd.name;
         this.veriPass = Boolean(defaultAdd.phone);
@@ -308,6 +311,16 @@ export default {
     areaCode(val) {
       if (this.defaultAdd) {
         this.veriPass = val + this.phone === this.defaultAdd.phone;
+      }
+    },
+    pendingAddress(val) {
+      if (val.length > 0) {
+        this.pendingSubs = [];
+      }
+    },
+    pendingSubs(val) {
+      if (val.length > 0) {
+        this.pendingAddress = [];
       }
     },
   },
@@ -454,6 +467,11 @@ export default {
       this.address = address;
       this.addValid = true;
       this.fetchingAddr = false;
+      if (subName) {
+        this.subName = subName;
+        this.subValid = true;
+        this.fetchShipFeeBySub(subName);
+      }
       this.pendingAddress = [];
     },
     showAction() {
@@ -484,8 +502,11 @@ export default {
             });
           } else {
             _this.address = geoRes.address;
-            _this.subName = geoRes.subName;
-            _this.fetchShipFeeBySub(geoRes.subName);
+            if (geoRes.subName) {
+              _this.subName = geoRes.subName;
+              _this.subValid = true;
+              _this.fetchShipFeeBySub(geoRes.subName);
+            }
           }
         },
         fail: () => {
