@@ -1,6 +1,6 @@
 <template>
   <div class="bg confirm-bg">
-    <kefubtn :bottom="160" />
+    <kefubtn :bottom="190" />
     <uniCalendar ref="calendar" :insert="false" @confirm="confirmDate" />
     <div class="row-card">
       <div class="row">
@@ -137,9 +137,11 @@
       <text style="line-height:1.5;">{{ruleText}}</text>
     </div>
     <div class="gap"></div>
+    <div class="gap"></div>
     <button class="share" open-type="share" v-if="!share">转发订单</button>
-    <div class="gap"></div>
-    <div class="gap"></div>
+    <div class="page-gap"></div>
+    <div class="page-gap"></div>
+    <div class="page-gap"></div>
     <div class="page-gap"></div>
     <div class="bottom-control">
       <div class="left">
@@ -192,7 +194,7 @@ export default {
     };
   },
   async onShow() {
-    const { billInfo, deliveryDetail } = this.$mp.query;
+    const { billInfo } = this.$mp.query;
     if (billInfo) {
       this.share = true;
       const bill = JSON.parse(decodeURIComponent(billInfo));
@@ -209,8 +211,12 @@ export default {
     } else {
       this.cutText_c = false;
       this.shipText_c = false;
+      const deliveryDetail = uni.getStorageSync("deliveryDetail");
+      if (deliveryDetail) {
+        uni.removeStorageSync("deliveryDetail");
+      }
       const defaultAdd = deliveryDetail
-        ? JSON.parse(deliveryDetail)
+        ? deliveryDetail
         : (this.userInfo.deliveryDetail || []).find((item) => {
             return item.ifDefault;
           });

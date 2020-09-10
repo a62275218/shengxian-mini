@@ -60,7 +60,7 @@
         </div>
         <div class="home" @click="goCart">
           <image src="/static/gouwuche-active.png" mode="widthFix" />
-          <div class="number" v-if="cart.length">{{cart.length}}</div>
+          <div class="number" v-if="totalProductNum > 0">{{totalProductNum}}</div>
           <div style="margin-top:-10rpx">购物车</div>
         </div>
       </div>
@@ -128,7 +128,7 @@ export default {
     } else {
       product = await this.$request("fetchProductById", {
         data: {
-          productId: id
+          productId: id,
         },
         loading: true,
       });
@@ -146,6 +146,11 @@ export default {
     this.product = product;
     this.$store.commit("addHistory", product);
     this.checkProductLike();
+  },
+  onShareAppMessage() {
+    return {
+      path: `/pages/product?id=${this.product.id}`,
+    };
   },
   computed: {
     ...mapState(["productList", "userInfo", "cart"]),
@@ -173,6 +178,13 @@ export default {
         });
         this.checkProductLike();
       }, 1000);
+    },
+    totalProductNum() {
+      return this.cart.length
+        ? this.cart.reduce((total, current) => {
+            return (total += current.num);
+          }, 0)
+        : 0;
     },
     // textDesc() {
     //   return this.product.description
@@ -315,6 +327,7 @@ export default {
           title: "生成失败",
           icon: "none",
         });
+        this.shareCardShow = false;
         return;
       }
       uni.showLoading();

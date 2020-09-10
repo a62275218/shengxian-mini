@@ -237,11 +237,13 @@ export default {
     confirmAdd(index) {
       const { type } = this.$mp.query;
       if (type === "confirm") {
-        uni.navigateTo({
-          url: `/pages/billconfirm?deliveryDetail=${JSON.stringify(
-            this.deliveryDetail[index]
-          )}`,
-        });
+        uni.setStorageSync("deliveryDetail", this.deliveryDetail[index]);
+        uni.navigateBack();
+        // uni.redirectTo({
+        //   url: `/pages/billconfirm?deliveryDetail=${JSON.stringify(
+        //     this.deliveryDetail[index]
+        //   )}`,
+        // });
       }
     },
     formatPhoneNumber,
