@@ -64,6 +64,9 @@ export default {
       selectAll: true,
     };
   },
+  onShow(){
+    this.$store.dispatch('fetchCart');
+  },
   computed: {
     ...mapState(["cart", "userInfo"]),
     totalPrice() {
@@ -126,6 +129,7 @@ export default {
         });
         return;
       }
+      this.$store.dispatch('fetchCart');
       const result = await this.$request("checkProductStorageBeforeMakeOrder", {
         loading: true,
         data: {

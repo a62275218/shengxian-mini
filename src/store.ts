@@ -143,6 +143,30 @@ const store = new Vuex.Store({
         commit("updateUser", newUser);
       }
     },
+    fetchCart: async ({ state, commit }, payload) => {
+      if (state.cart.length > 0) {
+        const copyCart = [...state.cart];
+        const cartInfo = await request("fetchProductByIdsForCheckCart", {
+          data: {
+            productIds: copyCart.map((item) => {
+              return item.product.id;
+            }),
+          },
+        });
+        if (cartInfo) {
+          copyCart.forEach((oldPro, index) => {
+            const findItem = (cartInfo as any).find((newPro) => {
+              return newPro.id === oldPro.product.id;
+            });
+            if (findItem) {
+              copyCart[index].product.price = findItem.price;
+            }
+          });
+          state.cart = copyCart;
+          uni.setStorageSync("cart", state.cart);
+        }
+      }
+    },
   },
   mutations: {
     retriveCart: (state) => {
